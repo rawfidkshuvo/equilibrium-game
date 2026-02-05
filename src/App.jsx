@@ -222,7 +222,7 @@ const ANIMALS = {
         let count = 0;
         getNeighbors(cell.q, cell.r).forEach(n => {
             const neighbor = board[`${n.q},${n.r}`];
-            if(neighbor && neighbor.stack[0] === 'SAND') count++;
+            if (neighbor && neighbor.stack[0] === 'SAND') count++;
         });
         return count >= 2;
     }
@@ -961,9 +961,9 @@ export default function Equilibrium() {
               me.landscapeScore = ls.total;
               me.landscapeScoreBreakdown = ls.breakdown;
 
-              // Check for Board Fullness (ALL Spaces used)
-              const emptySpaceCount = Object.values(me.board).filter(c => c.stack.length < 3).length;
-              if (emptySpaceCount === 0) {
+              // Check for Board Fullness (Game ends if a player has no empty hexes left, regardless of height)
+              const hasEmptySpace = Object.values(me.board).some(c => c.stack.length === 0);
+              if (!hasEmptySpace) {
                   updates.status = "finished";
                   updates.logs = arrayUnion({ text: `${me.name}'s world is full! Game Over.`, type: "warning", id: Date.now() });
               }

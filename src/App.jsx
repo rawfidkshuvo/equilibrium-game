@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import {
   Earth,
+  Circle,
   Hexagon,
   TreeDeciduous,
   Mountain,
@@ -1724,55 +1725,72 @@ const ScoreboardModal = ({ gameState, onClose }) => (
         <BarChart2 /> Live Scores
       </h2>
       <div className="space-y-4">
-        {gameState.players.map((p) => (
-          <div
-            key={p.id}
-            className="bg-slate-800 p-4 rounded-xl border border-slate-700"
-          >
-            <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-2">
-              <span className="font-bold text-lg text-white">{p.name}</span>
-              <span className="text-2xl font-black text-yellow-500">
-                {p.score + (p.landscapeScore || 0)}
-              </span>
+        {gameState.players.map((p) => {
+          // --- CALCULATE SCORES ---
+          const animalScore = p.score || 0;
+          const landscapeScore = p.landscapeScore || 0;
+          const penaltyPoints = (p.penalties || 0) * 2;
+          const totalScore = animalScore + landscapeScore - penaltyPoints;
+          // ------------------------
+
+          return (
+            <div
+              key={p.id}
+              className="bg-slate-800 p-4 rounded-xl border border-slate-700"
+            >
+              <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-2">
+                <span className="font-bold text-lg text-white">{p.name}</span>
+                <span className="text-2xl font-black text-yellow-500">
+                  {totalScore}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
+                <div className="flex justify-between text-fuchsia-300">
+                  <span>Animals:</span>{" "}
+                  <span className="text-fuchsia-300 font-bold">{animalScore}</span>
+                </div>
+                <div className="flex justify-between text-green-300">
+                  <span>Trees:</span>{" "}
+                  <span className="text-green-300 font-bold">
+                    {p.landscapeScoreBreakdown?.trees || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Mountains:</span>{" "}
+                  <span className="text-slate-300 font-bold">
+                    {p.landscapeScoreBreakdown?.mountains || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-yellow-300">
+                  <span>Fields:</span>{" "}
+                  <span className="text-yellow-300 font-bold">
+                    {p.landscapeScoreBreakdown?.fields || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-blue-300">
+                  <span>Rivers:</span>{" "}
+                  <span className="text-blue-300 font-bold">
+                    {p.landscapeScoreBreakdown?.rivers || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-red-300">
+                  <span>Buildings:</span>{" "}
+                  <span className="text-red-300 font-bold">
+                    {p.landscapeScoreBreakdown?.buildings || 0}
+                  </span>
+                </div>
+                {/* --- PENALTY ROW (Only show if > 0) --- */}
+                {penaltyPoints > 0 && (
+                  <div className="flex justify-between text-red-500">
+                    <span>Penalties:</span>{" "}
+                    <span className="font-bold">-{penaltyPoints}</span>
+                  </div>
+                )}
+                {/* -------------------------------------- */}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
-              <div className="flex justify-between">
-                <span>Animals:</span>{" "}
-                <span className="text-white font-bold">{p.score}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Trees:</span>{" "}
-                <span className="text-white font-bold">
-                  {p.landscapeScoreBreakdown?.trees || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Mountains:</span>{" "}
-                <span className="text-white font-bold">
-                  {p.landscapeScoreBreakdown?.mountains || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Fields:</span>{" "}
-                <span className="text-white font-bold">
-                  {p.landscapeScoreBreakdown?.fields || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Rivers:</span>{" "}
-                <span className="text-white font-bold">
-                  {p.landscapeScoreBreakdown?.rivers || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Buildings:</span>{" "}
-                <span className="text-white font-bold">
-                  {p.landscapeScoreBreakdown?.buildings || 0}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   </div>
@@ -1995,6 +2013,7 @@ export default function Equilibrium() {
           id: user.uid,
           name: playerName,
           score: 0,
+          penalties: 0, // <--- ADD THIS
           landscapeScore: 0,
           landscapeScoreBreakdown: {
             trees: 0,
@@ -2059,6 +2078,7 @@ export default function Equilibrium() {
               id: user.uid,
               name: playerName,
               score: 0,
+              penalties: 0, // <--- ADD THIS
               landscapeScore: 0,
               landscapeScoreBreakdown: {
                 trees: 0,
@@ -2190,6 +2210,7 @@ export default function Equilibrium() {
     const players = gameState.players.map((p) => ({
       ...p,
       score: 0,
+      penalties: 0, // <--- ADD THIS
       landscapeScore: 0,
       landscapeScoreBreakdown: {
         trees: 0,
@@ -2412,7 +2433,9 @@ export default function Equilibrium() {
     if (selectedHoldingIdx === null || !me.holding[selectedHoldingIdx]) return;
 
     me.holding.splice(selectedHoldingIdx, 1);
-    me.score = Math.max(0, me.score - 2); // Deduct 2 pts
+    // Instead of subtracting from score, we increment penalties
+    me.penalties = (me.penalties || 0) + 1;
+    // --- CHANGED LOGIC END ---
     setSelectedHoldingIdx(null);
 
     await updateDoc(
@@ -2791,7 +2814,7 @@ export default function Equilibrium() {
                   ${
                     gameState.players.length < 2
                       ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-                      : "bg-emerald-500 text-slate-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
+                      : "bg-emerald-500 text-white-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
                   }
                 `}
               >
@@ -2998,6 +3021,12 @@ export default function Equilibrium() {
             {gameState.players.map((p, i) => {
               // Check if it is this player's turn
               const isTurn = gameState.turnIndex === i;
+              // --- ADD THIS CALCULATION ---
+              const totalScore =
+                (p.score || 0) +
+                (p.landscapeScore || 0) -
+                (p.penalties || 0) * 2;
+              // ---------------------------
 
               return (
                 <button
@@ -3036,7 +3065,7 @@ export default function Equilibrium() {
                     {p.name}
                   </span>
                   <span className="text-[10px] md:text-xs font-black text-yellow-500">
-                    {p.score + (p.landscapeScore || 0)}
+                    {totalScore}
                   </span>
                 </button>
               );
@@ -3101,138 +3130,141 @@ export default function Equilibrium() {
           </div>
 
           {/* --- DRAFTING PALETTE OVERLAY (Colored Inactive State) --- */}
-        {activePalette && (
-          <div 
-            className="absolute bottom-0 left-0 right-0 z-[60] h-44 bg-slate-900/95 border-t-2 border-emerald-500/50 backdrop-blur-xl flex flex-col animate-in slide-in-from-bottom-full duration-300 shadow-2xl"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            {/* HEADER */}
-            <div className="flex justify-between items-center px-4 h-8 border-b border-white/10 bg-black/20 shrink-0">
-              <div className="flex items-center gap-2">
-                {activePalette === "TOKENS" ? (
-                  <Grid className="text-cyan-400" size={14} />
-                ) : (
-                  <PawPrint className="text-orange-400" size={14} />
-                )}
-                <h3 className="text-xs font-black text-white uppercase tracking-widest leading-none">
-                  Draft {activePalette === "TOKENS" ? "Tokens" : "Animal"}
-                </h3>
+          {activePalette && (
+            <div
+              className="absolute bottom-0 left-0 right-0 z-[60] h-44 bg-slate-900/95 border-t-2 border-emerald-500/50 backdrop-blur-xl flex flex-col animate-in slide-in-from-bottom-full duration-300 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* HEADER */}
+              <div className="flex justify-between items-center px-4 h-8 border-b border-white/10 bg-black/20 shrink-0">
+                <div className="flex items-center gap-2">
+                  {activePalette === "TOKENS" ? (
+                    <Circle className="text-cyan-400" size={14} />
+                  ) : (
+                    <PawPrint className="text-orange-400" size={14} />
+                  )}
+                  <h3 className="text-xs font-black text-white uppercase tracking-widest leading-none">
+                    Draft {activePalette === "TOKENS" ? "Tokens" : "Animal"}
+                  </h3>
+                </div>
+
+                <button
+                  onClick={() => setActivePalette(null)}
+                  className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors border border-slate-600 font-bold text-[10px]"
+                >
+                  <span>Close</span>
+                  <X size={12} />
+                </button>
               </div>
-              
-              <button
-                onClick={() => setActivePalette(null)}
-                className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors border border-slate-600 font-bold text-[10px]"
-              >
-                <span>Close</span>
-                <X size={12} />
-              </button>
-            </div>
 
-            {/* CONTENT SCROLLER */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 no-scrollbar flex items-center bg-gradient-to-b from-transparent to-black/30">
-              <div className="flex gap-4 items-center min-w-max h-full justify-center">
-                
-                {/* --- OPTION A: TOKEN MARKET (Vertical Capsules) --- */}
-                {activePalette === "TOKENS" && gameState.market.map((slot, idx) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => handleDraftToken(idx)}
-                    disabled={!isMyTurn || me.hasDraftedTokens}
-                    // CHANGED: Removed 'disabled:grayscale'. Changed 'disabled:opacity-50' to 'disabled:opacity-40'
-                    className="relative group h-32 w-14 shrink-0 rounded-full transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {/* The Capsule Body */}
-                    <div className="absolute inset-0 bg-slate-800 rounded-full border-4 border-slate-700 shadow-xl group-hover:border-cyan-500 group-hover:bg-slate-750 transition-colors flex flex-col items-center justify-evenly py-1">
-                      
-                      {/* Inner Dark Track */}
-                      <div className="absolute inset-x-2 top-2 bottom-2 bg-black/30 rounded-full border border-white/5"></div>
-                      
-                      {/* The 3 Tokens Stacked Vertically */}
-                      <div className="relative z-10 flex flex-col gap-1.5 h-full justify-center">
-                        {slot.tokens.map((t, i) => {
-                          const T = TOKEN_TYPES[t];
-                          return (
-                            <div
-                              key={i}
-                              className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center ${T.color} ${T.border}`}
-                            >
-                              <T.icon size={14} className="text-white/90" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+              {/* CONTENT SCROLLER */}
+              <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 no-scrollbar flex items-center bg-gradient-to-b from-transparent to-black/30">
+                <div className="flex gap-4 items-center min-w-max h-full justify-center">
+                  {/* --- OPTION A: TOKEN MARKET (Vertical Capsules) --- */}
+                  {activePalette === "TOKENS" &&
+                    gameState.market.map((slot, idx) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => handleDraftToken(idx)}
+                        disabled={!isMyTurn || me.hasDraftedTokens}
+                        // CHANGED: Removed 'disabled:grayscale'. Changed 'disabled:opacity-50' to 'disabled:opacity-40'
+                        className="relative group h-32 w-14 shrink-0 rounded-full transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {/* The Capsule Body */}
+                        <div className="absolute inset-0 bg-slate-800 rounded-full border-4 border-slate-700 shadow-xl group-hover:border-cyan-500 group-hover:bg-slate-750 transition-colors flex flex-col items-center justify-evenly py-1">
+                          {/* Inner Dark Track */}
+                          <div className="absolute inset-x-2 top-2 bottom-2 bg-black/30 rounded-full border border-white/5"></div>
 
-                    {/* Hover "GET" Action */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                      <div className="bg-cyan-600 text-white text-[10px] font-bold px-2 py-3 rounded-xl shadow-lg border border-cyan-400 tracking-widest uppercase flex flex-col items-center leading-none gap-1">
-                        <span>G</span>
-                        <span>E</span>
-                        <span>T</span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-
-                {/* --- OPTION B: ANIMAL MARKET (Compact Cards) --- */}
-                {activePalette === "ANIMALS" && gameState.animalMarket.map((card, idx) => {
-                  const def = ANIMALS[card.type];
-                  const canDraft =
-                    isMyTurn &&
-                    !me.hasDraftedAnimal &&
-                    me.animals.filter((a) => a.slotsFilled < a.maxSlots).length < 4;
-                  
-                  return (
-                    <button
-                      key={card.id}
-                      onClick={() => handleDraftAnimal(idx)}
-                      disabled={!canDraft}
-                      // CHANGED: Removed grayscale from the 'false' condition, set opacity-40
-                      className={`relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
-                        ${canDraft 
-                          ? "border-slate-600 hover:border-orange-500 hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(249,115,22,0.2)]" 
-                          : "opacity-60 cursor-not-allowed border-slate-800"
-                        }`}
-                    >
-                      {/* Card Header */}
-                      <div className="flex justify-between items-center px-2 py-1 border-b border-white/5 bg-black/20 shrink-0 h-7">
-                        <span className="text-[10px] font-bold text-white truncate max-w-[50px]">
-                          {def.name}
-                        </span>
-                        <span className="text-[10px] font-black text-yellow-500">
-                          +{def.points.join("/")}
-                        </span>
-                      </div>
-
-                      {/* Card Visual */}
-                      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900">
-                        <div className="scale-75 origin-center">
-                          <PatternPreview visual={def.visual} />
-                        </div>
-                      </div>
-
-                      {/* Hover Action */}
-                      {canDraft && (
-                        <div className="absolute inset-0 bg-orange-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                            ADOPT
+                          {/* The 3 Tokens Stacked Vertically */}
+                          <div className="relative z-10 flex flex-col gap-1.5 h-full justify-center">
+                            {slot.tokens.map((t, i) => {
+                              const T = TOKEN_TYPES[t];
+                              return (
+                                <div
+                                  key={i}
+                                  className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center ${T.color} ${T.border}`}
+                                >
+                                  <T.icon size={14} className="text-white/90" />
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
 
-                {/* Empty State */}
-                {activePalette === "ANIMALS" && gameState.animalMarket.length === 0 && (
-                  <div className="w-full text-center text-slate-500 font-bold text-xs italic pr-4">
-                    Empty...
-                  </div>
-                )}
+                        {/* Hover "GET" Action */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <div className="bg-cyan-600 text-white text-[10px] font-bold px-2 py-3 rounded-xl shadow-lg border border-cyan-400 tracking-widest uppercase flex flex-col items-center leading-none gap-1">
+                            <span>G</span>
+                            <span>E</span>
+                            <span>T</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+
+                  {/* --- OPTION B: ANIMAL MARKET (Compact Cards) --- */}
+                  {activePalette === "ANIMALS" &&
+                    gameState.animalMarket.map((card, idx) => {
+                      const def = ANIMALS[card.type];
+                      const canDraft =
+                        isMyTurn &&
+                        !me.hasDraftedAnimal &&
+                        me.animals.filter((a) => a.slotsFilled < a.maxSlots)
+                          .length < 4;
+
+                      return (
+                        <button
+                          key={card.id}
+                          onClick={() => handleDraftAnimal(idx)}
+                          disabled={!canDraft}
+                          // CHANGED: Removed grayscale from the 'false' condition, set opacity-40
+                          className={`relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
+                        ${
+                          canDraft
+                            ? "border-slate-600 hover:border-orange-500 hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(249,115,22,0.2)]"
+                            : "opacity-60 cursor-not-allowed border-slate-800"
+                        }`}
+                        >
+                          {/* Card Header */}
+                          <div className="flex justify-between items-center px-2 py-1 border-b border-white/5 bg-black/20 shrink-0 h-7">
+                            <span className="text-[10px] font-bold text-white truncate max-w-[50px]">
+                              {def.name}
+                            </span>
+                            <span className="text-[10px] font-black text-yellow-500">
+                              +{def.points.join("/")}
+                            </span>
+                          </div>
+
+                          {/* Card Visual */}
+                          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900">
+                            <div className="scale-75 origin-center">
+                              <PatternPreview visual={def.visual} />
+                            </div>
+                          </div>
+
+                          {/* Hover Action */}
+                          {canDraft && (
+                            <div className="absolute inset-0 bg-orange-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="bg-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                                ADOPT
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                  {/* Empty State */}
+                  {activePalette === "ANIMALS" &&
+                    gameState.animalMarket.length === 0 && (
+                      <div className="w-full text-center text-slate-500 font-bold text-xs italic pr-4">
+                        Empty...
+                      </div>
+                    )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
           {gameState.status === "finished" && (
             <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm">
@@ -3247,12 +3279,13 @@ export default function Equilibrium() {
 
                 <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar text-sm">
                   {gameState.players
-                    .sort(
-                      (a, b) =>
-                        b.score +
-                        b.landscapeScore -
-                        (a.score + a.landscapeScore),
-                    )
+                    .sort((a, b) => {
+                      const scoreA =
+                        a.score + a.landscapeScore - (a.penalties || 0) * 2;
+                      const scoreB =
+                        b.score + b.landscapeScore - (b.penalties || 0) * 2;
+                      return scoreB - scoreA;
+                    })
                     .map((p, i) => (
                       <div
                         key={p.id}
@@ -3267,8 +3300,11 @@ export default function Equilibrium() {
                               {p.name}
                             </span>
                           </div>
+                          // Display logic inside the map
                           <span className="text-2xl font-black text-yellow-500">
-                            {p.score + p.landscapeScore}
+                            {(p.score || 0) +
+                              (p.landscapeScore || 0) -
+                              (p.penalties || 0) * 2}
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
@@ -3400,7 +3436,7 @@ export default function Equilibrium() {
                       : "bg-slate-800 border-slate-600 text-slate-500"
                   }`}
                 >
-                  <Grid size={24} />
+                  <Circle size={24} />
                 </button>
                 <button
                   onClick={() => {

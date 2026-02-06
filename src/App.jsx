@@ -18,6 +18,7 @@ import {
   increment,
 } from "firebase/firestore";
 import {
+  Earth,
   Hexagon,
   TreeDeciduous,
   Mountain,
@@ -318,7 +319,7 @@ const ANIMALS = {
   DUCK: {
     id: "DUCK",
     name: "Duck",
-    desc: "Water next to Rush (Log)",
+    desc: "Water next to Wood (Log)",
     points: [2, 2, 3],
     slots: 3,
     icon: Bird,
@@ -394,7 +395,7 @@ const ANIMALS = {
   TURTLE: {
     id: "TURTLE",
     name: "Turtle",
-    desc: "Water next to Sand AND Stone",
+    desc: "Water next to Field AND Stone",
     points: [4, 4],
     slots: 2,
     icon: Shell,
@@ -414,7 +415,7 @@ const ANIMALS = {
   BOAR: {
     id: "BOAR",
     name: "Boar",
-    desc: "Field (Sand) next to Water AND Tree",
+    desc: "Field next to Water AND Tree",
     points: [3, 3, 3],
     slots: 3,
     icon: Rat,
@@ -509,7 +510,7 @@ const ANIMALS = {
   SCORPION: {
     id: "SCORPION",
     name: "Scorpion",
-    desc: "Medium Rock (2 Stone) next to Sand",
+    desc: "Medium Rock (2 Stone) next to Field",
     points: [3, 3, 3],
     slots: 3,
     icon: Bug,
@@ -588,7 +589,7 @@ const ANIMALS = {
   RABBIT: {
     id: "RABBIT",
     name: "Rabbit",
-    desc: "Field (Sand) next to 2 Bushes",
+    desc: "Field next to 2 Bushes",
     points: [2, 2, 2, 2],
     slots: 4,
     icon: Rabbit,
@@ -607,24 +608,20 @@ const ANIMALS = {
   MOLE: {
     id: "MOLE",
     name: "Mole",
-    desc: "Stone surrounded by 3 Fields",
+    desc: "Stone next to 2 Fields",
     points: [5, 6], // Buffed
     slots: 2,
     icon: Rat,
     iconColor: "text-stone-700",
-    visual: {
-      type: "adj",
-      main: ["STONE"],
-      others: [["SAND"], ["SAND"], ["SAND"]],
-    },
+    visual: { type: "adj", main: ["STONE"], others: [["SAND"], ["SAND"]] },
     check: (cell, board) => {
       if (cell.stack[0] !== "STONE") return false;
-      let sandCount = 0;
+      let bushes = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (neighbor && neighbor.stack[0] === "SAND") sandCount++;
+        if (neighbor && checkStack(neighbor, ["SAND"])) bushes++;
       });
-      return sandCount >= 3;
+      return bushes >= 2;
     },
   },
 
@@ -633,7 +630,7 @@ const ANIMALS = {
   BAT: {
     id: "BAT",
     name: "Bat",
-    desc: "Building (Ht 2) next to Water",
+    desc: "Building next to Water",
     points: [3, 3, 3],
     slots: 3,
     icon: Ghost,
@@ -646,7 +643,7 @@ const ANIMALS = {
   CAT: {
     id: "CAT",
     name: "Cat",
-    desc: "Building (Ht 2) next to 2 Fields",
+    desc: "Building next to 2 Fields",
     points: [5, 5], // Buffed
     slots: 2,
     icon: Cat,
@@ -757,7 +754,7 @@ const ANIMALS = {
   RHINO: {
     id: "RHINO",
     name: "Rhino",
-    desc: "Line: Stone -> Stone -> Sand",
+    desc: "Line: Stone -> Stone -> Field",
     points: [5, 6],
     slots: 2,
     icon: Crown,
@@ -892,7 +889,7 @@ const ANIMALS = {
   ELEPHANT: {
     id: "ELEPHANT",
     name: "Elephant",
-    desc: "Line: Sand -> Tree -> Water",
+    desc: "Line: Field -> Tree -> Water",
     points: [6, 7],
     slots: 2,
     icon: Anchor,
@@ -1031,32 +1028,64 @@ const calculateLandscapeScore = (board) => {
   const visited = new Set();
   const cells = Object.values(board);
 
-  // 1. TREES
+  // 3. TREES & BUSHES
+  // Logic: Must end in a LEAF to score landscape points.
+  // [WOOD, WOOD, WOOD] -> 0 pts
+  // [WOOD, BRICK]      -> 0 pts (handled by buildings)
+  // [WOOD, LEAF]       -> 3 pts
   cells.forEach((cell) => {
-    if (cell.stack[cell.stack.length - 1] === "LEAF") {
-      const height = cell.stack.length;
-      if (height === 2 && cell.stack[0] === "WOOD") breakdown.trees += 3;
-      if (height === 3 && cell.stack[0] === "WOOD" && cell.stack[1] === "WOOD")
-        breakdown.trees += 7;
+    const height = cell.stack.length;
+    if (height === 0) return;
+
+    const topType = cell.stack[height - 1];
+    const baseType = cell.stack[0];
+
+    // Filter 1: If top is BRICK, it is a Building. Skip.
+    if (topType === "BRICK") return;
+
+    // Filter 2: If top is WOOD, it is just a trunk. Skip.
+    // (This fixes your concern: 3 Logs will now score 0)
+    if (topType === "WOOD") return;
+
+    // Filter 3: SCORING - Only score if the top is a LEAF
+    if (topType === "LEAF") {
+      // Case A: Just a Leaf on the ground (Bush)
+      if (height === 1) {
+        breakdown.trees += 1;
+      }
+      // Case B: Leaf on top of Wood (Tree)
+      else if (baseType === "WOOD") {
+        if (height === 2)
+          breakdown.trees += 3; // Small Tree (Wood + Leaf)
+        else if (height === 3) breakdown.trees += 7; // Tall Tree (Wood + Wood + Leaf)
+      }
     }
   });
 
   // 2. MOUNTAINS (Stone)
-  // OLD: Score = Height (1, 2, 3)
-  // NEW: Score = 1->1, 2->3, 3->7 (Matches Tree power curve)
+  // FIX: Added check `cell.stack[height - 1] === "STONE"`
+  // This ensures we don't count a [STONE, BRICK] stack as a mountain.
   cells.forEach((cell) => {
-    if (cell.stack[0] === "STONE") {
-      const height = cell.stack.length;
+    const height = cell.stack.length;
+
+    // Condition: Base is Stone AND Top is Stone
+    if (cell.stack[0] === "STONE" && cell.stack[height - 1] === "STONE") {
       const neighbors = getNeighbors(cell.q, cell.r);
-      const touchesMountain = neighbors.some(
-        (n) => board[`${n.q},${n.r}`]?.stack[0] === "STONE",
-      );
+
+      // Check if it touches another valid Mountain (Top must be stone)
+      const touchesMountain = neighbors.some((n) => {
+        const neighbor = board[`${n.q},${n.r}`];
+        return (
+          neighbor &&
+          neighbor.stack.length > 0 &&
+          neighbor.stack[neighbor.stack.length - 1] === "STONE" // Check Top
+        );
+      });
 
       if (touchesMountain) {
         if (height === 1) breakdown.mountains += 1;
-        else if (height === 2)
-          breakdown.mountains += 3; // Buffed from 2
-        else if (height >= 3) breakdown.mountains += 7; // Buffed from 3
+        else if (height === 2) breakdown.mountains += 3;
+        else if (height >= 3) breakdown.mountains += 7;
       }
     }
   });
@@ -1222,7 +1251,7 @@ const REFILL_MARKET = (currentMarket, currentBag) => {
 const REFILL_ANIMAL_MARKET = (currentMarket, currentDeck) => {
   let market = [...currentMarket];
   let deck = [...currentDeck];
-  while (market.length < 4 && deck.length > 0) {
+  while (market.length < 5 && deck.length > 0) {
     const type = deck.pop();
     market.push({
       id: Math.random().toString(36).substr(2, 9),
@@ -1900,7 +1929,11 @@ export default function Equilibrium() {
     if (!playerName) return setError("Enter Name");
     localStorage.setItem("gameHub_playerName", playerName);
     setLoading(true);
-    const newId = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const chars = "123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";
+    let newId = "";
+    for (let i = 0; i < 6; i++) {
+      newId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
     const initialBag = CREATE_BAG();
     const initialAnimalDeck = CREATE_ANIMAL_DECK();
     const { market, bag } = REFILL_MARKET([], initialBag);
@@ -2554,7 +2587,7 @@ export default function Equilibrium() {
                 disabled={loading}
                 className="bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 shadow-lg shadow-emerald-900/50"
               >
-                <Sparkles size={24} />
+                <Earth size={24} />
                 <span>Create</span>
               </button>
               <div className="flex flex-col gap-2">
@@ -2570,7 +2603,7 @@ export default function Equilibrium() {
                   disabled={loading}
                   className="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl font-bold text-slate-300 transition-all active:scale-95 h-full"
                 >
-                  Join
+                  Penetrate
                 </button>
               </div>
             </div>
@@ -2590,7 +2623,7 @@ export default function Equilibrium() {
             href="https://rawfidkshuvo.github.io/gamehub/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-cyan-500 underline hover:text-cyan-600"
+            className="text-emerald-500 underline hover:text-emerald-600"
           >
             GAMEHUB
           </a>{" "}
@@ -2636,7 +2669,7 @@ export default function Equilibrium() {
 
                   {/* 3. The Copied Popup */}
                   {isCopied && (
-                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-cyan-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg animate-fade-in-up whitespace-nowrap">
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-emerald-500 text-black text-xs font-bold px-2 py-1 rounded shadow-lg animate-fade-in-up whitespace-nowrap">
                       Copied!
                     </div>
                   )}
@@ -2715,8 +2748,8 @@ export default function Equilibrium() {
       `}
               >
                 {gameState.players.length < 2
-                  ? "Waiting for Players..."
-                  : "Start Game"}
+                  ? "Waiting for Architects..."
+                  : "CREATE WORLD"}
               </button>
 
               {/* Helper Text */}

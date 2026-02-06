@@ -1747,45 +1747,47 @@ const ScoreboardModal = ({ gameState, onClose }) => (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
                 <div className="flex justify-between text-fuchsia-300">
                   <span>Animals:</span>{" "}
-                  <span className="text-fuchsia-300 font-bold">{animalScore}</span>
+                  <span className="text-fuchsia-500 font-bold">
+                    {animalScore}
+                  </span>
                 </div>
                 <div className="flex justify-between text-green-300">
                   <span>Trees:</span>{" "}
-                  <span className="text-green-300 font-bold">
+                  <span className="text-green-500 font-bold">
                     {p.landscapeScoreBreakdown?.trees || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Mountains:</span>{" "}
-                  <span className="text-slate-300 font-bold">
+                  <span className="text-slate-500 font-bold">
                     {p.landscapeScoreBreakdown?.mountains || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-yellow-300">
                   <span>Fields:</span>{" "}
-                  <span className="text-yellow-300 font-bold">
+                  <span className="text-yellow-500 font-bold">
                     {p.landscapeScoreBreakdown?.fields || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-blue-300">
                   <span>Rivers:</span>{" "}
-                  <span className="text-blue-300 font-bold">
+                  <span className="text-blue-500 font-bold">
                     {p.landscapeScoreBreakdown?.rivers || 0}
                   </span>
                 </div>
                 <div className="flex justify-between text-red-300">
                   <span>Buildings:</span>{" "}
-                  <span className="text-red-300 font-bold">
+                  <span className="text-red-500 font-bold">
                     {p.landscapeScoreBreakdown?.buildings || 0}
                   </span>
                 </div>
                 {/* --- PENALTY ROW (Only show if > 0) --- */}
                 {penaltyPoints > 0 && (
-                  <div className="flex justify-between text-red-500">
-                    <span>Penalties:</span>{" "}
-                    <span className="font-bold">-{penaltyPoints}</span>
+                  <div className="flex justify-between text-red-400 font-bold col-span-2 border-t border-slate-700 pt-1 mt-1">
+                    <span>Penalties:</span> <span>-{penaltyPoints}</span>
                   </div>
                 )}
+
                 {/* -------------------------------------- */}
               </div>
             </div>
@@ -3273,86 +3275,144 @@ export default function Equilibrium() {
                   size={64}
                   className="text-yellow-400 mx-auto mb-4 animate-bounce"
                 />
-                <h2 className="text-3xl font-black text-white uppercase mb-4">
-                  Game Complete
-                </h2>
 
-                <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar text-sm">
-                  {gameState.players
-                    .sort((a, b) => {
-                      const scoreA =
-                        a.score + a.landscapeScore - (a.penalties || 0) * 2;
-                      const scoreB =
-                        b.score + b.landscapeScore - (b.penalties || 0) * 2;
-                      return scoreB - scoreA;
-                    })
-                    .map((p, i) => (
-                      <div
-                        key={p.id}
-                        className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex flex-col gap-2"
-                      >
-                        <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-emerald-500 font-bold">
-                              #{i + 1}
-                            </span>
-                            <span className="font-bold text-white text-lg">
-                              {p.name}
-                            </span>
-                          </div>
-                          // Display logic inside the map
-                          <span className="text-2xl font-black text-yellow-500">
-                            {(p.score || 0) +
-                              (p.landscapeScore || 0) -
-                              (p.penalties || 0) * 2}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400">
-                          <div className="flex justify-between">
-                            <span>Animals:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.score}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Trees:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.landscapeScoreBreakdown?.trees || 0}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Mountains:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.landscapeScoreBreakdown?.mountains || 0}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Fields:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.landscapeScoreBreakdown?.fields || 0}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Rivers:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.landscapeScoreBreakdown?.rivers || 0}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Buildings:</span>{" "}
-                            <span className="text-white font-bold">
-                              {p.landscapeScoreBreakdown?.buildings || 0}
-                            </span>
-                          </div>
-                        </div>
+                {/* --- WINNER CALCULATION & HEADER --- */}
+                {(() => {
+                  // 1. Helper to count total animals placed (Tie-breaker)
+                  const getAnimalsPlaced = (p) =>
+                    p.animals.reduce((sum, card) => sum + card.slotsFilled, 0);
+
+                  // 2. Helper to get Net Score
+                  const getNetScore = (p) =>
+                    (p.score || 0) +
+                    (p.landscapeScore || 0) -
+                    (p.penalties || 0) * 2;
+
+                  // 3. Sort Players
+                  const sortedPlayers = [...gameState.players].sort((a, b) => {
+                    const scoreA = getNetScore(a);
+                    const scoreB = getNetScore(b);
+
+                    // Primary Sort: Score
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+
+                    // Secondary Sort: Most Animals Placed
+                    const animalsA = getAnimalsPlaced(a);
+                    const animalsB = getAnimalsPlaced(b);
+                    return animalsB - animalsA;
+                  });
+
+                  // 4. Identify Winners (Handle Ties)
+                  const topPlayer = sortedPlayers[0];
+                  const topScore = getNetScore(topPlayer);
+                  const topAnimals = getAnimalsPlaced(topPlayer);
+
+                  const winners = sortedPlayers.filter(
+                    (p) =>
+                      getNetScore(p) === topScore &&
+                      getAnimalsPlaced(p) === topAnimals,
+                  );
+
+                  return (
+                    <>
+                      <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 uppercase mb-2">
+                        {winners.map((w) => w.name).join(" & ")}
+                      </h2>
+                      <p className="text-emerald-400 font-bold tracking-widest text-sm uppercase mb-6">
+                        Rescued the World!
+                      </p>
+
+                      <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar text-sm">
+                        {sortedPlayers.map((p, i) => {
+                          const penaltyPoints = (p.penalties || 0) * 2;
+                          const totalScore = getNetScore(p);
+                          const isWinner = winners.some((w) => w.id === p.id);
+                          const animalsPlacedCount = getAnimalsPlaced(p);
+
+                          return (
+                            <div
+                              key={p.id}
+                              className={`p-3 rounded-xl border flex flex-col gap-2 relative overflow-hidden transition-all
+                                ${
+                                  isWinner
+                                    ? "bg-slate-800 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                                    : "bg-slate-800 border-slate-700 opacity-80"
+                                }`}
+                            >
+                              {/* Winner Glow Effect */}
+                              {isWinner && (
+                                <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none" />
+                              )}
+
+                              <div className="flex justify-between items-center border-b border-slate-700 pb-2 relative z-10">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`font-mono font-bold ${isWinner ? "text-yellow-500" : "text-slate-500"}`}
+                                  >
+                                    #{i + 1}
+                                  </span>
+                                  <span className="font-bold text-white text-lg flex items-center gap-2">
+                                    {p.name}
+                                    {/* --- CROWN ICON --- */}
+                                    {isWinner && (
+                                      <Crown
+                                        size={18}
+                                        className="text-yellow-400 fill-yellow-400/20"
+                                      />
+                                    )}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`text-2xl font-black ${isWinner ? "text-yellow-400 scale-110" : "text-slate-400"}`}
+                                >
+                                  {totalScore}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400 relative z-10">
+                                <div className="flex justify-between">
+                                  <span>Animals Placed:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {animalsPlacedCount}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Animal Pts:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {p.score}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Landscape Pts:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {p.landscapeScore}
+                                  </span>
+                                </div>
+
+                                {/* Penalty Row */}
+                                {penaltyPoints > 0 ? (
+                                  <div className="flex justify-between text-red-400 font-bold">
+                                    <span>Penalties:</span>{" "}
+                                    <span>-{penaltyPoints}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex justify-between text-emerald-600/50">
+                                    <span>Penalties:</span> <span>0</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                </div>
+                    </>
+                  );
+                })()}
 
                 {gameState.hostId === user.uid && (
                   <button
                     onClick={returnToLobby}
-                    className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full"
+                    className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full text-white transition-colors"
                   >
                     Return to Lobby
                   </button>

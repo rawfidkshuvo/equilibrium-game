@@ -1989,7 +1989,6 @@ export default function Equilibrium() {
               board: GENERATE_HEX_GRID(),
               holding: [],
               animals: [],
-              ready: false,
               hasDraftedTokens: false,
               hasDraftedAnimal: false,
             },
@@ -2032,18 +2031,18 @@ export default function Equilibrium() {
     );
   };
 
-  const toggleReady = async () => {
-    if (!gameState) return;
-    const players = [...gameState.players];
-    const me = players.find((p) => p.id === user.uid);
-    if (me) {
-      me.ready = !me.ready;
-      await updateDoc(
-        doc(db, "artifacts", APP_ID, "public", "data", "rooms", roomId),
-        { players },
-      );
-    }
-  };
+  //   const toggleReady = async () => {
+  //     if (!gameState) return;
+  //     const players = [...gameState.players];
+  //     const me = players.find((p) => p.id === user.uid);
+  //     if (me) {
+  //       me.ready = !me.ready;
+  //       await updateDoc(
+  //         doc(db, "artifacts", APP_ID, "public", "data", "rooms", roomId),
+  //         { players },
+  //       );
+  //     }
+  //   };
 
   const handleLeave = async () => {
     if (!roomId) return;
@@ -2583,11 +2582,19 @@ export default function Equilibrium() {
             </button>
           </div>
         </div>
-        <div className="absolute bottom-4 text-slate-600 text-xs text-center z-10">
-          Inspired by Harmonies.
+        <div className="absolute bottom-4 text-slate-600 text-xs text-center">
+          Inspired by Harmonies. A tribute game.
           <br />
-          Developed by{" "}
-          <strong className="text-emerald-600">RAWFID K SHUVO</strong>.
+          Developed by <strong>RAWFID K SHUVO</strong>. Visit{" "}
+          <a
+            href="https://rawfidkshuvo.github.io/gamehub/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-500 underline hover:text-cyan-600"
+          >
+            GAMEHUB
+          </a>{" "}
+          for more games.
         </div>
       </div>
     );
@@ -2666,15 +2673,7 @@ export default function Equilibrium() {
                     <Crown size={16} className="text-yellow-500" />
                   )}
                 </span>
-                {p.ready ? (
-                  <span className="text-emerald-400 text-xs font-bold uppercase bg-emerald-900/20 px-2 py-1 rounded">
-                    Ready
-                  </span>
-                ) : (
-                  <span className="text-slate-500 text-xs font-bold uppercase">
-                    Waiting
-                  </span>
-                )}
+
                 {/* --- KICK BUTTON START --- */}
                 {gameState.hostId === user.uid && p.id !== user.uid && (
                   <button
@@ -2699,22 +2698,41 @@ export default function Equilibrium() {
               ),
             )}
           </div>
-          {isHost ? (
-            <button
-              onClick={startGame}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-bold text-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              <Play size={24} fill="currentColor" /> Start Game
-            </button>
-          ) : (
-            <button
-              onClick={toggleReady}
-              className={`w-full py-4 rounded-xl font-bold text-xl transition-all active:scale-95 ${gameState.players.find((p) => p.id === user.uid)?.ready ? "bg-slate-700 text-emerald-400" : "bg-emerald-600 text-white"}`}
-            >
-              {gameState.players.find((p) => p.id === user.uid)?.ready
-                ? "READY"
-                : "MARK READY"}
-            </button>
+          {/* --- HOST CONTROLS --- */}
+          {isHost && (
+            <div className="mt-8 flex flex-col items-center gap-2">
+              <button
+                onClick={startGame}
+                // CHANGED: Only disable if there are fewer than 2 players
+                disabled={gameState.players.length < 2}
+                className={`
+        px-12 py-4 rounded-xl font-bold text-xl shadow-lg transition-all
+        ${
+          gameState.players.length < 2
+            ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+            : "bg-emerald-500 text-white-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
+        }
+      `}
+              >
+                {gameState.players.length < 2
+                  ? "Waiting for Players..."
+                  : "Start Game"}
+              </button>
+
+              {/* Helper Text */}
+              {gameState.players.length < 2 && (
+                <p className="text-slate-500 text-sm">
+                  Need at least 2 players to start
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* --- NON-HOST MESSAGE --- */}
+          {!isHost && (
+            <div className="mt-8 text-center text-slate-500 animate-pulse">
+              Waiting for host to start the game...
+            </div>
           )}
         </div>
         {showLeaveConfirm && (
@@ -2891,29 +2909,52 @@ export default function Equilibrium() {
         <div className="flex-1 relative bg-slate-950 overflow-hidden flex flex-col items-center justify-center">
           {/* OPPONENT TABS */}
           <div className="absolute top-2 md:top-4 left-0 right-0 z-10 grid grid-cols-4 gap-1 px-2 w-full max-w-2xl mx-auto pointer-events-auto">
-            {gameState.players.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setViewingPlayerId(p.id)}
-                className={`
-                                flex flex-col items-center justify-center h-12 md:h-14 rounded-xl border-2 transition-all w-full
-                                ${
-                                  viewingPlayerId === p.id
-                                    ? "bg-slate-800 border-emerald-500 shadow-lg scale-105 z-10"
-                                    : "bg-slate-900/80 border-slate-700 hover:bg-slate-800/80 text-slate-400"
-                                }
-                            `}
-              >
-                <span
-                  className={`text-[9px] md:text-[10px] font-bold uppercase truncate max-w-full px-1 ${p.id === gameState.players[gameState.turnIndex].id ? "text-emerald-400" : ""}`}
+            {gameState.players.map((p, i) => {
+              // Check if it is this player's turn
+              const isTurn = gameState.turnIndex === i;
+
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setViewingPlayerId(p.id)}
+                  // ADDED: 'relative' and 'overflow-visible' so the badge can float outside
+                  className={`
+                  relative overflow-visible
+                  flex flex-col items-center justify-center h-12 md:h-14 rounded-xl border-2 transition-all w-full
+                  ${
+                    viewingPlayerId === p.id
+                      ? "bg-slate-800 border-emerald-500 shadow-lg scale-105 z-10"
+                      : "bg-slate-900/80 border-slate-700 hover:bg-slate-800/80 text-slate-400"
+                  }
+                `}
                 >
-                  {p.name}
-                </span>
-                <span className="text-[10px] md:text-xs font-black text-yellow-500">
-                  {p.score + p.landscapeScore}
-                </span>
-              </button>
-            ))}
+                  {/* --- NEW: PLAYING BADGE --- */}
+                  {isTurn && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+                      <div className="flex flex-col items-center animate-bounce-slight">
+                        <div className="bg-emerald-500 text-slate-900 text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] flex items-center gap-1 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
+                          PLAYING
+                        </div>
+                        {/* Triangle Pointer */}
+                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-emerald-500 -mt-[1px]"></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <span
+                    className={`text-[9px] md:text-[10px] font-bold uppercase truncate max-w-full px-1 ${
+                      isTurn ? "text-emerald-400" : ""
+                    }`}
+                  >
+                    {p.name}
+                  </span>
+                  <span className="text-[10px] md:text-xs font-black text-yellow-500">
+                    {p.score + (p.landscapeScore || 0)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {viewingPlayer.id !== user.uid ? (

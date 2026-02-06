@@ -1157,46 +1157,41 @@ const calculateLandscapeScore = (board) => {
     }
   });
 
-  // 4. RIVERS (Water) - Longest Chain
-  visited.clear();
-  let maxRiverLength = 0;
+  // 4. RIVERS (Water) - Score ALL distinct chains
+  visited.clear(); // Reset visited set for river pass
   cells.forEach((cell) => {
+    // Start a new river chain if we find unvisited Water
     if (cell.stack[0] === "WATER" && !visited.has(`${cell.q},${cell.r}`)) {
       let groupSize = 0;
-      let subVisited = new Set();
       let queue = [cell];
       visited.add(`${cell.q},${cell.r}`);
-      subVisited.add(`${cell.q},${cell.r}`);
 
+      // BFS to find all connected water
       while (queue.length > 0) {
         const current = queue.pop();
         groupSize++;
         getNeighbors(current.q, current.r).forEach((n) => {
           const neighbor = board[`${n.q},${n.r}`];
           const nKey = `${n.q},${n.r}`;
-          if (
-            neighbor &&
-            neighbor.stack[0] === "WATER" &&
-            !subVisited.has(nKey)
-          ) {
+          if (neighbor && neighbor.stack[0] === "WATER" && !visited.has(nKey)) {
             visited.add(nKey);
-            subVisited.add(nKey);
             queue.push(neighbor);
           }
         });
       }
-      if (groupSize > maxRiverLength) maxRiverLength = groupSize;
+
+      // SCORE THIS SPECIFIC CHAIN
+      if (groupSize === 2) breakdown.rivers += 2;
+      else if (groupSize === 3) breakdown.rivers += 5;
+      else if (groupSize === 4) breakdown.rivers += 8;
+      else if (groupSize === 5) breakdown.rivers += 11;
+      else if (groupSize === 6) breakdown.rivers += 15;
+      else if (groupSize > 6) {
+        // 15 base points for the first 6, plus 4 for every extra
+        breakdown.rivers += 15 + (groupSize - 6) * 4;
+      }
     }
   });
-  if (maxRiverLength === 2) breakdown.rivers = 2;
-  else if (maxRiverLength === 3) breakdown.rivers = 5;
-  else if (maxRiverLength === 4) breakdown.rivers = 8;
-  else if (maxRiverLength === 5) breakdown.rivers = 11;
-  else if (maxRiverLength === 6) breakdown.rivers = 15;
-  else if (maxRiverLength > 6) {
-    // 15 base points for the first 6, plus 4 for every extra
-    breakdown.rivers = 15 + (maxRiverLength - 6) * 4;
-  }
 
   // 5. BUILDINGS (Brick)
   // Rule: Must be Height 2. Top=Brick. Base=Brick/Stone/Wood.
@@ -1626,9 +1621,7 @@ const RulesModal = ({ onClose }) => (
               <ul className="list-disc pl-4 text-xs space-y-1">
                 <li>2 High (1 Log + 1 Leaf): 3 Pts</li>
                 <li>3 High (2 Log + 2 Leaf): 7 Pts</li>
-                <li className="text-slate-500 italic">
-                  Foliage on ground: 0 Pts (Bush)
-                </li>
+                <li>1 Leaf alone (Bush): 1 Pt</li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
@@ -1656,7 +1649,7 @@ const RulesModal = ({ onClose }) => (
                 Rivers (Water)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
-                <li>Longest Chain scoring:</li>
+                <li>Chain scoring:</li>
                 <li>2=2pts, 3=5pts, 4=8pts, 5=11pts, 6+ = +4pts for each.</li>
               </ul>
             </div>
@@ -3107,102 +3100,139 @@ export default function Equilibrium() {
             })}
           </div>
 
-          {activePalette && (
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setActivePalette(null)}
-            >
-              <div
-                className="bg-slate-900 border border-slate-600 p-6 rounded-3xl w-full max-w-lg shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                    {activePalette === "TOKENS" ? (
-                      <Sparkles className="text-cyan-400" />
-                    ) : (
-                      <PawPrint className="text-orange-400" />
-                    )}
-                    Select {activePalette === "TOKENS" ? "Tokens" : "Animal"}
-                  </h3>
-                  <button
-                    onClick={() => setActivePalette(null)}
-                    className="p-2 bg-slate-800 rounded-full text-slate-400"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
+          {/* --- DRAFTING PALETTE OVERLAY (Colored Inactive State) --- */}
+        {activePalette && (
+          <div 
+            className="absolute bottom-0 left-0 right-0 z-[60] h-44 bg-slate-900/95 border-t-2 border-emerald-500/50 backdrop-blur-xl flex flex-col animate-in slide-in-from-bottom-full duration-300 shadow-2xl"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-center px-4 h-8 border-b border-white/10 bg-black/20 shrink-0">
+              <div className="flex items-center gap-2">
                 {activePalette === "TOKENS" ? (
-                  <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                    {gameState.market.map((slot, idx) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => handleDraftToken(idx)}
-                        disabled={!isMyTurn || me.hasDraftedTokens}
-                        className="bg-slate-800 border-2 border-slate-700 hover:border-cyan-500 p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale-0"
-                      >
+                  <Grid className="text-cyan-400" size={14} />
+                ) : (
+                  <PawPrint className="text-orange-400" size={14} />
+                )}
+                <h3 className="text-xs font-black text-white uppercase tracking-widest leading-none">
+                  Draft {activePalette === "TOKENS" ? "Tokens" : "Animal"}
+                </h3>
+              </div>
+              
+              <button
+                onClick={() => setActivePalette(null)}
+                className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors border border-slate-600 font-bold text-[10px]"
+              >
+                <span>Close</span>
+                <X size={12} />
+              </button>
+            </div>
+
+            {/* CONTENT SCROLLER */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 no-scrollbar flex items-center bg-gradient-to-b from-transparent to-black/30">
+              <div className="flex gap-4 items-center min-w-max h-full justify-center">
+                
+                {/* --- OPTION A: TOKEN MARKET (Vertical Capsules) --- */}
+                {activePalette === "TOKENS" && gameState.market.map((slot, idx) => (
+                  <button
+                    key={slot.id}
+                    onClick={() => handleDraftToken(idx)}
+                    disabled={!isMyTurn || me.hasDraftedTokens}
+                    // CHANGED: Removed 'disabled:grayscale'. Changed 'disabled:opacity-50' to 'disabled:opacity-40'
+                    className="relative group h-32 w-14 shrink-0 rounded-full transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {/* The Capsule Body */}
+                    <div className="absolute inset-0 bg-slate-800 rounded-full border-4 border-slate-700 shadow-xl group-hover:border-cyan-500 group-hover:bg-slate-750 transition-colors flex flex-col items-center justify-evenly py-1">
+                      
+                      {/* Inner Dark Track */}
+                      <div className="absolute inset-x-2 top-2 bottom-2 bg-black/30 rounded-full border border-white/5"></div>
+                      
+                      {/* The 3 Tokens Stacked Vertically */}
+                      <div className="relative z-10 flex flex-col gap-1.5 h-full justify-center">
                         {slot.tokens.map((t, i) => {
                           const T = TOKEN_TYPES[t];
                           return (
                             <div
                               key={i}
-                              className={`w-8 h-8 rounded-full border shadow-sm flex items-center justify-center ${T.color} ${T.border}`}
+                              className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center ${T.color} ${T.border}`}
                             >
-                              <T.icon size={14} className="text-white/70" />
+                              <T.icon size={14} className="text-white/90" />
                             </div>
                           );
                         })}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                    {gameState.animalMarket.map((card, idx) => {
-                      const def = ANIMALS[card.type];
-                      const canDraft =
-                        isMyTurn &&
-                        !me.hasDraftedAnimal &&
-                        me.animals.filter((a) => a.slotsFilled < a.maxSlots)
-                          .length < 4;
-                      return (
-                        <button
-                          key={card.id}
-                          onClick={() => handleDraftAnimal(idx)}
-                          disabled={!canDraft}
-                          className={`bg-slate-800 border-2 border-slate-700 p-4 rounded-xl flex items-center gap-4 text-left transition-all ${canDraft ? "hover:border-orange-500 hover:bg-slate-700 active:scale-95" : "opacity-50 cursor-not-allowed"}`}
-                        >
-                          <div className="bg-black/30 p-3 rounded-full shrink-0">
-                            <def.icon className={def.iconColor} size={24} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center">
-                              <div className="font-bold text-white text-lg">
-                                {def.name}
-                              </div>
-                              <span className="text-yellow-500 text-sm font-bold">
-                                +{def.points.join("/")}
-                              </span>
-                            </div>
-                            <div className="text-slate-400 text-xs">
-                              {def.desc}
-                            </div>
-                            <div className="mt-2 flex justify-center scale-90 origin-left">
-                              <PatternPreview visual={def.visual} />
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                    {gameState.animalMarket.length === 0 && (
-                      <div className="text-slate-500 text-center py-8">
-                        No animals wandering by...
                       </div>
-                    )}
+                    </div>
+
+                    {/* Hover "GET" Action */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <div className="bg-cyan-600 text-white text-[10px] font-bold px-2 py-3 rounded-xl shadow-lg border border-cyan-400 tracking-widest uppercase flex flex-col items-center leading-none gap-1">
+                        <span>G</span>
+                        <span>E</span>
+                        <span>T</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+
+                {/* --- OPTION B: ANIMAL MARKET (Compact Cards) --- */}
+                {activePalette === "ANIMALS" && gameState.animalMarket.map((card, idx) => {
+                  const def = ANIMALS[card.type];
+                  const canDraft =
+                    isMyTurn &&
+                    !me.hasDraftedAnimal &&
+                    me.animals.filter((a) => a.slotsFilled < a.maxSlots).length < 4;
+                  
+                  return (
+                    <button
+                      key={card.id}
+                      onClick={() => handleDraftAnimal(idx)}
+                      disabled={!canDraft}
+                      // CHANGED: Removed grayscale from the 'false' condition, set opacity-40
+                      className={`relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
+                        ${canDraft 
+                          ? "border-slate-600 hover:border-orange-500 hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(249,115,22,0.2)]" 
+                          : "opacity-60 cursor-not-allowed border-slate-800"
+                        }`}
+                    >
+                      {/* Card Header */}
+                      <div className="flex justify-between items-center px-2 py-1 border-b border-white/5 bg-black/20 shrink-0 h-7">
+                        <span className="text-[10px] font-bold text-white truncate max-w-[50px]">
+                          {def.name}
+                        </span>
+                        <span className="text-[10px] font-black text-yellow-500">
+                          +{def.points.join("/")}
+                        </span>
+                      </div>
+
+                      {/* Card Visual */}
+                      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-900">
+                        <div className="scale-75 origin-center">
+                          <PatternPreview visual={def.visual} />
+                        </div>
+                      </div>
+
+                      {/* Hover Action */}
+                      {canDraft && (
+                        <div className="absolute inset-0 bg-orange-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                            ADOPT
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* Empty State */}
+                {activePalette === "ANIMALS" && gameState.animalMarket.length === 0 && (
+                  <div className="w-full text-center text-slate-500 font-bold text-xs italic pr-4">
+                    Empty...
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           {gameState.status === "finished" && (
             <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm">
@@ -3298,12 +3328,14 @@ export default function Equilibrium() {
 
         {/* --- BOTTOM UI CONTAINER --- */}
         <div className="h-64 bg-transparent absolute bottom-0 left-0 right-0 z-40 px-2 pb-2 flex justify-between items-end pointer-events-none">
-          <div className="flex gap-2 pointer-events-auto items-end w-full">
+          <div className="flex gap-2 items-end w-full pointer-events-none">
             {/* --- BOTTOM LEFT: CONTROLS --- */}
-            <div className="flex flex-col gap-2 mb-1 shrink-0 z-50">
+            {/* CHANGED: pointer-events-auto -> pointer-events-none (Wrapper shouldn't block) */}
+            <div className="flex flex-col gap-2 mb-1 shrink-0 z-50 pointer-events-none">
               {/* HAND (Stacked above buttons) */}
               {isMyTurn && me.holding.length > 0 && (
-                <div className="bg-emerald-900/90 border border-cyan-500/30 px-2 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md animate-in slide-in-from-left-4">
+                // CHANGED: Added pointer-events-auto to the visible UI box
+                <div className="bg-emerald-900/90 border border-cyan-500/30 px-2 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md animate-in slide-in-from-left-4 pointer-events-auto">
                   <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest">
                     Placing
                   </span>
@@ -3347,7 +3379,8 @@ export default function Equilibrium() {
               {canEndTurn && (
                 <button
                   onClick={handleEndTurn}
-                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-bounce flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                  // CHANGED: Added pointer-events-auto
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-bounce flex items-center justify-center gap-2 text-sm whitespace-nowrap pointer-events-auto"
                 >
                   End Turn <SkipForward size={16} />
                 </button>
@@ -3360,7 +3393,8 @@ export default function Equilibrium() {
                     if (!checkViewAndWarn()) return;
                     setActivePalette("TOKENS");
                   }}
-                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${
+                  // CHANGED: Added pointer-events-auto
+                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 pointer-events-auto ${
                     isMyTurn && !me.hasDraftedTokens
                       ? "bg-cyan-600 border-cyan-400 text-white animate-bounce-subtle"
                       : "bg-slate-800 border-slate-600 text-slate-500"
@@ -3373,7 +3407,8 @@ export default function Equilibrium() {
                     if (!checkViewAndWarn()) return;
                     setActivePalette("ANIMALS");
                   }}
-                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${
+                  // CHANGED: Added pointer-events-auto
+                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 pointer-events-auto ${
                     isMyTurn &&
                     !me.hasDraftedAnimal &&
                     me.animals.filter((a) => a.slotsFilled < a.maxSlots)
@@ -3388,8 +3423,8 @@ export default function Equilibrium() {
             </div>
 
             {/* --- BOTTOM RIGHT: ANIMAL HAND AREA --- */}
-            {/* CHANGED: Removed 'mask-gradient-right' class */}
-            <div className="flex-1 flex gap-2 items-end overflow-x-auto pb-4 no-scrollbar h-60 pl-2">
+            {/* CHANGED: pointer-events-auto -> pointer-events-none (The scroll container acts as ghost) */}
+            <div className="flex-1 flex gap-2 items-end overflow-x-auto pb-4 no-scrollbar h-60 pl-2 pointer-events-none">
               {viewingPlayer.animals.map((card, i) => {
                 const def = ANIMALS[card.type];
                 const isSelected =
@@ -3407,7 +3442,8 @@ export default function Equilibrium() {
                       setSelectedHoldingIdx(null);
                       setSelectedAnimalIdx(isSelected ? null : i);
                     }}
-                    className={`relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 hover:-translate-y-4 text-left overflow-hidden ${
+                    // CHANGED: Added pointer-events-auto so the specific card is clickable
+                    className={`relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 hover:-translate-y-4 text-left overflow-hidden pointer-events-auto ${
                       isSelected
                         ? "border-yellow-400 ring-2 ring-yellow-500/50 scale-105 z-10 -translate-y-2"
                         : "border-slate-600 hover:border-slate-400"
@@ -3421,20 +3457,28 @@ export default function Equilibrium() {
                           {def.name}
                         </span>
                       </div>
-                      <span className="text-xs font-black text-yellow-500">
-                        +
-                        {
-                          def.points[
-                            Math.min(card.slotsFilled, def.points.length - 1)
-                          ]
-                        }
-                      </span>
+
+                      {!isComplete && (
+                        <span className="text-xs font-black text-yellow-500">
+                          +
+                          {
+                            def.points[
+                              Math.min(card.slotsFilled, def.points.length - 1)
+                            ]
+                          }
+                        </span>
+                      )}
+                      {isComplete && (
+                        <span className="text-[10px] font-bold text-emerald-500 uppercase">
+                          Done
+                        </span>
+                      )}
                     </div>
 
                     {/* Body */}
                     <div className="p-2 flex-1 flex flex-col items-center w-full min-h-0 justify-between bg-gradient-to-b from-slate-800/50 to-transparent">
                       {/* Preview Image */}
-                      <div className="scale-90 origin-center shrink-0 my-1">
+                      <div className="scale-75 origin-center shrink-0">
                         <PatternPreview visual={def.visual} />
                       </div>
 

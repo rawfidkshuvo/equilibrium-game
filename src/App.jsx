@@ -307,7 +307,7 @@ const ANIMALS = {
     id: "HERON",
     name: "Heron",
     desc: "Water next to Bush (Leaf)",
-    points: [3, 3, 3],
+    points: [2, 2, 2],
     slots: 3,
     icon: Bird,
     iconColor: "text-cyan-300",
@@ -320,7 +320,7 @@ const ANIMALS = {
     id: "DUCK",
     name: "Duck",
     desc: "Water next to Wood (Log)",
-    points: [2, 2, 3],
+    points: [2, 2, 2],
     slots: 3,
     icon: Bird,
     iconColor: "text-green-600",
@@ -344,7 +344,7 @@ const ANIMALS = {
     id: "EAGLE",
     name: "Eagle",
     desc: "Highest Peak (3 Stone)",
-    points: [4, 4],
+    points: [3, 4],
     slots: 2,
     icon: Target,
     iconColor: "text-sky-600",
@@ -358,7 +358,7 @@ const ANIMALS = {
     id: "FROG",
     name: "Frog",
     desc: "Bush (Leaf) next to Water",
-    points: [2, 3, 3, 4],
+    points: [2, 2, 2, 3],
     slots: 4,
     icon: Clover,
     iconColor: "text-lime-500",
@@ -396,7 +396,7 @@ const ANIMALS = {
     id: "TURTLE",
     name: "Turtle",
     desc: "Water next to Field AND Stone",
-    points: [4, 4],
+    points: [3, 3],
     slots: 2,
     icon: Shell,
     iconColor: "text-teal-600",
@@ -432,6 +432,30 @@ const ANIMALS = {
       );
       return (
         neighbors.some((n) => n?.stack[0] === "WATER") &&
+        neighbors.some((n) => n && checkStack(n, ["WOOD", "LEAF"]))
+      );
+    },
+  },
+  ANTS: {
+    id: "ANTS",
+    name: "Ants",
+    desc: "Field next to Bush(1 Leaf) AND Tree",
+    points: [3, 3, 3],
+    slots: 3,
+    icon: Bug,
+    iconColor: "text-amber-600",
+    visual: {
+      type: "adj",
+      main: ["SAND"],
+      others: [["LEAF"], ["WOOD", "LEAF"]],
+    },
+    check: (cell, board) => {
+      if (cell.stack[0] !== "SAND") return false;
+      const neighbors = getNeighbors(cell.q, cell.r).map(
+        (n) => board[`${n.q},${n.r}`],
+      );
+      return (
+        neighbors.some((n) => n?.stack[0] === "LEAF") &&
         neighbors.some((n) => n && checkStack(n, ["WOOD", "LEAF"]))
       );
     },
@@ -472,7 +496,7 @@ const ANIMALS = {
     id: "BEAR",
     name: "Bear",
     desc: "Tall Tree (2 Log+Leaf) next to Mountain (2+ Stone)",
-    points: [4, 5],
+    points: [5, 5],
     slots: 2,
     icon: PawPrint,
     iconColor: "text-stone-800",
@@ -527,7 +551,7 @@ const ANIMALS = {
     id: "BEE",
     name: "Bee",
     desc: "Bush (Leaf) next to 2 other Bushes",
-    points: [3, 3, 3],
+    points: [2, 2, 3],
     slots: 3,
     icon: Flower,
     iconColor: "text-yellow-400",
@@ -546,7 +570,7 @@ const ANIMALS = {
     id: "WOLF",
     name: "Wolf",
     desc: "Tree (1 Log+Leaf) next to 2 other Trees",
-    points: [5, 5],
+    points: [4, 5],
     slots: 2,
     icon: Moon,
     iconColor: "text-slate-500",
@@ -572,7 +596,7 @@ const ANIMALS = {
     id: "SALMON",
     name: "Salmon",
     desc: "Water next to 2 other Water tiles",
-    points: [3, 3, 4],
+    points: [2, 2, 3],
     slots: 3,
     icon: Fish,
     iconColor: "text-rose-400",
@@ -590,7 +614,7 @@ const ANIMALS = {
     id: "RABBIT",
     name: "Rabbit",
     desc: "Field next to 2 Bushes",
-    points: [2, 2, 2, 2],
+    points: [3, 3, 4, 4],
     slots: 4,
     icon: Rabbit,
     iconColor: "text-stone-300",
@@ -605,12 +629,31 @@ const ANIMALS = {
       return bushes >= 2;
     },
   },
+  PENGUIN: {
+    id: "PENGUIN",
+    name: "Penguin",
+    desc: "Stone next to 2 Water tiles",
+    points: [3, 3, 4, 4],
+    slots: 4,
+    icon: Bird,
+    iconColor: "text-cyan-300",
+    visual: { type: "adj", main: ["STONE"], others: [["WATER"], ["WATER"]] },
+    check: (cell, board) => {
+      if (cell.stack[0] !== "STONE") return false;
+      let waters = 0;
+      getNeighbors(cell.q, cell.r).forEach((n) => {
+        const neighbor = board[`${n.q},${n.r}`];
+        if (neighbor && checkStack(neighbor, ["WATER"])) waters++;
+      });
+      return waters >= 2;
+    },
+  },
   MOLE: {
     id: "MOLE",
     name: "Mole",
     desc: "Stone next to 2 Fields",
-    points: [5, 6], // Buffed
-    slots: 2,
+    points: [3, 3, 4, 4],
+    slots: 4,
     icon: Rat,
     iconColor: "text-stone-700",
     visual: { type: "adj", main: ["STONE"], others: [["SAND"], ["SAND"]] },
@@ -644,7 +687,7 @@ const ANIMALS = {
     id: "CAT",
     name: "Cat",
     desc: "Building next to 2 Fields",
-    points: [5, 5], // Buffed
+    points: [4, 4], // Buffed
     slots: 2,
     icon: Cat,
     iconColor: "text-slate-300",
@@ -667,7 +710,7 @@ const ANIMALS = {
     id: "OWL",
     name: "Owl",
     desc: "Tall Tree (2 Log+Leaf) next to Building",
-    points: [4, 5],
+    points: [5, 5],
     slots: 2,
     icon: Eye,
     iconColor: "text-indigo-400",
@@ -684,7 +727,7 @@ const ANIMALS = {
     id: "SPIDER",
     name: "Spider",
     desc: "Dead Tree (3 Log) next to Building",
-    points: [3, 4],
+    points: [5, 5],
     slots: 2,
     icon: Snowflake,
     iconColor: "text-slate-900",
@@ -721,7 +764,7 @@ const ANIMALS = {
     id: "SNAKE",
     name: "Snake",
     desc: "Line: Bush -> Bush -> Stone",
-    points: [4, 5],
+    points: [3, 4],
     slots: 2,
     icon: Waves,
     iconColor: "text-emerald-500",
@@ -738,7 +781,7 @@ const ANIMALS = {
     id: "CAMEL",
     name: "Camel",
     desc: "Line: Sand -> Sand -> Stone",
-    points: [4, 5],
+    points: [3, 4],
     slots: 2,
     icon: PawPrint,
     iconColor: "text-amber-400",
@@ -755,7 +798,7 @@ const ANIMALS = {
     id: "RHINO",
     name: "Rhino",
     desc: "Line: Stone -> Stone -> Field",
-    points: [5, 6],
+    points: [3, 4],
     slots: 2,
     icon: Crown,
     iconColor: "text-stone-500",
@@ -772,7 +815,7 @@ const ANIMALS = {
     id: "SWAN",
     name: "Swan",
     desc: "Line: Water -> Water -> Leaf",
-    points: [4, 4],
+    points: [3, 4],
     slots: 2,
     icon: Feather,
     iconColor: "text-pink-400",
@@ -789,7 +832,7 @@ const ANIMALS = {
     id: "CRANE",
     name: "Crane",
     desc: "Line: Water -> Log -> Water",
-    points: [4, 5],
+    points: [3, 3],
     slots: 2,
     icon: Bird,
     iconColor: "text-red-400",
@@ -806,7 +849,7 @@ const ANIMALS = {
     id: "OCTOPUS",
     name: "Octopus",
     desc: "Line: Water -> Stone -> Water",
-    points: [4, 5], // Nerfed slightly
+    points: [3, 3], // Nerfed slightly
     slots: 2,
     icon: Snowflake,
     iconColor: "text-indigo-600",
@@ -826,7 +869,7 @@ const ANIMALS = {
     id: "MONKEY",
     name: "Monkey",
     desc: "Line: Small Tree -> Tall Tree",
-    points: [5, 6],
+    points: [4, 5],
     slots: 2,
     icon: PawPrint,
     iconColor: "text-amber-500",
@@ -848,7 +891,7 @@ const ANIMALS = {
     id: "COUGAR",
     name: "Cougar",
     desc: "Line: Medium Rock -> High Peak",
-    points: [6, 7],
+    points: [4, 5],
     slots: 2,
     icon: Flame,
     iconColor: "text-red-600",
@@ -870,7 +913,7 @@ const ANIMALS = {
     id: "KINGFISHER",
     name: "Kingfisher",
     desc: "Line: Tree -> Water -> Tree",
-    points: [6, 6],
+    points: [4, 4],
     slots: 2,
     icon: Feather,
     iconColor: "text-cyan-500",
@@ -890,7 +933,7 @@ const ANIMALS = {
     id: "ELEPHANT",
     name: "Elephant",
     desc: "Line: Field -> Tree -> Water",
-    points: [6, 7],
+    points: [4, 5],
     slots: 2,
     icon: Anchor,
     iconColor: "text-slate-600",
@@ -927,7 +970,7 @@ const ANIMALS = {
     id: "TIGER",
     name: "Tiger",
     desc: "Line: Bush -> Tall Tree -> Bush",
-    points: [7, 7],
+    points: [4, 4],
     slots: 2,
     icon: Flame,
     iconColor: "text-orange-500",
@@ -947,7 +990,7 @@ const ANIMALS = {
     id: "PEACOCK",
     name: "Peacock",
     desc: "Line: Tree -> Building -> Tree",
-    points: [6, 7],
+    points: [5, 6],
     slots: 2,
     icon: Flower,
     iconColor: "text-purple-500",
@@ -971,7 +1014,7 @@ const ANIMALS = {
     id: "GOAT",
     name: "Goat",
     desc: "High Peak (3 Stone) next to another Stone",
-    points: [5, 5],
+    points: [4, 4],
     slots: 2,
     icon: Mountain,
     iconColor: "text-gray-400",

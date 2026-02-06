@@ -499,7 +499,7 @@ const ANIMALS = {
     points: [5, 5],
     slots: 2,
     icon: PawPrint,
-    iconColor: "text-stone-800",
+    iconColor: "text-amber-800",
     visual: {
       type: "adj",
       main: ["WOOD", "WOOD", "LEAF"],
@@ -521,7 +521,7 @@ const ANIMALS = {
     points: [5, 5],
     slots: 2,
     icon: PawPrint,
-    iconColor: "text-slate-900",
+    iconColor: "text-white-900",
     visual: {
       type: "adj",
       main: ["WOOD", "WOOD", "LEAF"],
@@ -655,7 +655,7 @@ const ANIMALS = {
     points: [3, 3, 4, 4],
     slots: 4,
     icon: Rat,
-    iconColor: "text-stone-700",
+    iconColor: "text-amber-700",
     visual: { type: "adj", main: ["STONE"], others: [["SAND"], ["SAND"]] },
     check: (cell, board) => {
       if (cell.stack[0] !== "STONE") return false;
@@ -730,7 +730,7 @@ const ANIMALS = {
     points: [5, 5],
     slots: 2,
     icon: Snowflake,
-    iconColor: "text-slate-900",
+    iconColor: "text-red-900",
     visual: {
       type: "adj",
       main: ["WOOD", "WOOD", "WOOD"],
@@ -1613,6 +1613,7 @@ const RulesModal = ({ onClose }) => (
         Architect's Handbook
       </h2>
       <div className="space-y-6">
+        {/* LANDSCAPE SECTION (Unchanged) */}
         <section>
           <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
             <Hexagon className="text-emerald-500" /> Landscape Scoring
@@ -1671,6 +1672,8 @@ const RulesModal = ({ onClose }) => (
             </div>
           </div>
         </section>
+
+        {/* ANIMAL SECTION (Updated) */}
         <section>
           <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
             <PawPrint className="text-orange-500" /> Animal Scoring
@@ -1680,25 +1683,34 @@ const RulesModal = ({ onClose }) => (
             board, select the animal to place it!
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {Object.values(ANIMALS).map((a) => (
-              <div
-                key={a.id}
-                className="bg-slate-800 p-3 rounded-xl border border-emerald-900/30 flex flex-col items-center gap-2 text-xs"
-              >
-                <div className="scale-75 mb-2">
-                  <PatternPreview visual={a.visual} />
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-white text-sm">{a.name}</div>
-                  <div className="text-[10px] text-slate-400 leading-tight mb-2 h-8 overflow-hidden">
-                    {a.desc}
+            {Object.values(ANIMALS).map((a) => {
+              // Extract the icon component
+              const Icon = a.icon;
+              return (
+                <div
+                  key={a.id}
+                  className="bg-slate-800 p-3 rounded-xl border border-emerald-900/30 flex flex-col items-center gap-2 text-xs relative overflow-hidden"
+                >
+                  {/* --- NEW: Icon Display --- */}
+                  <div className="bg-black/30 p-2 rounded-full mb-1">
+                    <Icon size={20} className={a.iconColor} />
                   </div>
-                  <div className="text-[10px] text-yellow-500 font-bold bg-black/20 px-2 py-1 rounded-full">
-                    {a.points.join(" / ")} Pts
+
+                  <div className="scale-75 mb-2">
+                    <PatternPreview visual={a.visual} />
+                  </div>
+                  <div className="text-center z-10">
+                    <div className="font-bold text-white text-sm">{a.name}</div>
+                    <div className="text-[10px] text-slate-400 leading-tight mb-2 h-8 overflow-hidden line-clamp-2">
+                      {a.desc}
+                    </div>
+                    <div className="text-[10px] text-yellow-500 font-bold bg-black/20 px-2 py-1 rounded-full inline-block">
+                      {a.points.join(" / ")} Pts
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
@@ -2779,16 +2791,16 @@ export default function Equilibrium() {
             <div className="mt-8 flex flex-col items-center gap-2">
               <button
                 onClick={startGame}
-                // CHANGED: Only disable if there are fewer than 2 players
                 disabled={gameState.players.length < 2}
+                // CHANGED: Reduced padding (px-8 py-3) and font size (text-lg)
                 className={`
-        px-12 py-4 rounded-xl font-bold text-xl shadow-lg transition-all
-        ${
-          gameState.players.length < 2
-            ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-            : "bg-emerald-500 text-white-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
-        }
-      `}
+                  px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all
+                  ${
+                    gameState.players.length < 2
+                      ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+                      : "bg-emerald-500 text-slate-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
+                  }
+                `}
               >
                 {gameState.players.length < 2
                   ? "Waiting for Architects..."
@@ -2797,8 +2809,8 @@ export default function Equilibrium() {
 
               {/* Helper Text */}
               {gameState.players.length < 2 && (
-                <p className="text-slate-500 text-sm">
-                  Need at least 2 players to start
+                <p className="text-slate-600 text-xs uppercase tracking-widest font-bold">
+                  Need 2+ players
                 </p>
               )}
             </div>
@@ -2806,8 +2818,9 @@ export default function Equilibrium() {
 
           {/* --- NON-HOST MESSAGE --- */}
           {!isHost && (
-            <div className="mt-8 text-center text-slate-500 animate-pulse">
-              Waiting for host to start the game...
+            // CHANGED: Added 'text-sm' and 'font-bold' for a cleaner look
+            <div className="mt-8 text-center text-slate-500 text-sm font-bold uppercase tracking-widest animate-pulse">
+              Waiting for host to start...
             </div>
           )}
         </div>
@@ -2911,7 +2924,11 @@ export default function Equilibrium() {
             </button>
             <button
               onClick={() => setShowLogs(!showLogs)}
-              className={`p-2 rounded transition-colors ${showLogs ? "bg-slate-800 text-white" : "hover:bg-slate-800 text-slate-400"}`}
+              className={`p-2 rounded-full ${
+                showLogs
+                  ? "bg-emerald-900 text-emerald-400"
+                  : "text-gray-400 hover:bg-gray-800"
+              }`}
             >
               <History size={18} />
             </button>
@@ -3279,17 +3296,18 @@ export default function Equilibrium() {
           )}
         </div>
 
-        <div className="h-40 bg-transparent absolute bottom-0 left-0 right-0 z-40 p-4 flex justify-between items-end pointer-events-none">
-          <div className="flex gap-4 pointer-events-auto items-end w-full">
-            {/* BOTTOM LEFT: Controls */}
-            <div className="flex flex-col gap-4 mb-1">
+        {/* --- BOTTOM UI CONTAINER --- */}
+        <div className="h-64 bg-transparent absolute bottom-0 left-0 right-0 z-40 px-2 pb-2 flex justify-between items-end pointer-events-none">
+          <div className="flex gap-2 pointer-events-auto items-end w-full">
+            {/* --- BOTTOM LEFT: CONTROLS --- */}
+            <div className="flex flex-col gap-2 mb-1 shrink-0 z-50">
               {/* HAND (Stacked above buttons) */}
               {isMyTurn && me.holding.length > 0 && (
-                <div className="bg-emerald-900/90 border border-cyan-500/30 px-3 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md">
+                <div className="bg-emerald-900/90 border border-cyan-500/30 px-2 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md animate-in slide-in-from-left-4">
                   <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest">
                     Placing
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {me.holding.map((t, i) => {
                       const T = TOKEN_TYPES[t];
                       return (
@@ -3300,9 +3318,15 @@ export default function Equilibrium() {
                             setSelectedHoldingIdx(i);
                             setSelectedAnimalIdx(null);
                           }}
-                          className={`w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center transition-all active:scale-90 ${T.color} ${T.border} ${selectedHoldingIdx === i ? "ring-4 ring-white scale-110 z-10" : "opacity-80 hover:opacity-100 hover:scale-105"}`}
+                          className={`w-10 h-10 rounded-full border-2 shadow-lg flex items-center justify-center transition-all active:scale-90 ${
+                            T.color
+                          } ${T.border} ${
+                            selectedHoldingIdx === i
+                              ? "ring-4 ring-white scale-110 z-10"
+                              : "opacity-80 hover:opacity-100 hover:scale-105"
+                          }`}
                         >
-                          <T.icon size={14} className="text-white/80" />
+                          <T.icon size={18} className="text-white/80" />
                         </button>
                       );
                     })}
@@ -3318,24 +3342,29 @@ export default function Equilibrium() {
                   </div>
                 </div>
               )}
+
               {/* END TURN BUTTON */}
               {canEndTurn && (
                 <button
                   onClick={handleEndTurn}
-                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-xl shadow-lg animate-bounce flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-bounce flex items-center justify-center gap-2 text-sm whitespace-nowrap"
                 >
-                  End Turn <SkipForward size={14} />
+                  End Turn <SkipForward size={16} />
                 </button>
               )}
 
               {/* PALETTE BUTTONS */}
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <button
                   onClick={() => {
                     if (!checkViewAndWarn()) return;
                     setActivePalette("TOKENS");
                   }}
-                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${isMyTurn && !me.hasDraftedTokens ? "bg-cyan-600 border-cyan-400 text-white animate-bounce-subtle" : "bg-slate-800 border-slate-600 text-slate-500"}`}
+                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${
+                    isMyTurn && !me.hasDraftedTokens
+                      ? "bg-cyan-600 border-cyan-400 text-white animate-bounce-subtle"
+                      : "bg-slate-800 border-slate-600 text-slate-500"
+                  }`}
                 >
                   <Grid size={24} />
                 </button>
@@ -3344,39 +3373,51 @@ export default function Equilibrium() {
                     if (!checkViewAndWarn()) return;
                     setActivePalette("ANIMALS");
                   }}
-                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${isMyTurn && !me.hasDraftedAnimal && me.animals.filter((a) => a.slotsFilled < a.maxSlots).length < 4 ? "bg-orange-600 border-orange-400 text-white" : "bg-slate-800 border-slate-600 text-slate-500"}`}
+                  className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 ${
+                    isMyTurn &&
+                    !me.hasDraftedAnimal &&
+                    me.animals.filter((a) => a.slotsFilled < a.maxSlots)
+                      .length < 4
+                      ? "bg-orange-600 border-orange-400 text-white"
+                      : "bg-slate-800 border-slate-600 text-slate-500"
+                  }`}
                 >
                   <PawPrint size={24} />
                 </button>
               </div>
             </div>
 
-            {/* ANIMAL HAND AREA */}
-            <div className="flex gap-2 items-end ml-2 overflow-x-auto pb-1 max-w-[calc(100vw-160px)] no-scrollbar mask-gradient-right h-52">
+            {/* --- BOTTOM RIGHT: ANIMAL HAND AREA --- */}
+            {/* CHANGED: Removed 'mask-gradient-right' class */}
+            <div className="flex-1 flex gap-2 items-end overflow-x-auto pb-4 no-scrollbar h-60 pl-2">
               {viewingPlayer.animals.map((card, i) => {
                 const def = ANIMALS[card.type];
                 const isSelected =
                   i === selectedAnimalIdx && viewingPlayer.id === user.uid;
                 const isComplete = card.slotsFilled >= card.maxSlots;
+
                 return (
                   <button
                     key={card.id}
                     onClick={() => {
                       if (viewingPlayer.id !== user.uid) {
-                        checkViewAndWarn(); // Show warning
+                        checkViewAndWarn();
                         return;
                       }
                       setSelectedHoldingIdx(null);
                       setSelectedAnimalIdx(isSelected ? null : i);
                     }}
-                    // CHANGED: h-40 -> h-44 to make card taller
-                    className={`relative w-28 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all hover:-translate-y-2 text-left overflow-hidden ${isSelected ? "border-yellow-400 ring-2 ring-yellow-500/50 scale-105 z-10" : "border-slate-600"} ${isComplete ? "grayscale opacity-75" : ""}`}
+                    className={`relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 hover:-translate-y-4 text-left overflow-hidden ${
+                      isSelected
+                        ? "border-yellow-400 ring-2 ring-yellow-500/50 scale-105 z-10 -translate-y-2"
+                        : "border-slate-600 hover:border-slate-400"
+                    } ${isComplete ? "grayscale opacity-75" : ""}`}
                   >
                     {/* Header */}
                     <div className="flex justify-between items-center p-2 border-b border-white/10 bg-black/20 h-10 shrink-0">
                       <div className="flex items-center gap-1">
                         <def.icon size={14} className={def.iconColor} />
-                        <span className="text-xs font-bold text-white truncate max-w-[60px]">
+                        <span className="text-xs font-bold text-white truncate max-w-[70px]">
                           {def.name}
                         </span>
                       </div>
@@ -3390,25 +3431,29 @@ export default function Equilibrium() {
                       </span>
                     </div>
 
-                    {/* Body: using justify-between to space items evenly */}
-                    <div className="p-2 flex-1 flex flex-col items-center w-full min-h-0 justify-between">
+                    {/* Body */}
+                    <div className="p-2 flex-1 flex flex-col items-center w-full min-h-0 justify-between bg-gradient-to-b from-slate-800/50 to-transparent">
                       {/* Preview Image */}
-                      <div className="scale-75 origin-center shrink-0">
+                      <div className="scale-90 origin-center shrink-0 my-1">
                         <PatternPreview visual={def.visual} />
                       </div>
 
-                      {/* Description: Added min-h-[24px] to force it to show, and text-slate-300 for brightness */}
-                      <div className="text-[9px] text-slate-300 text-center leading-tight line-clamp-2 px-1 w-full break-words min-h-[24px] flex items-center justify-center">
+                      {/* Description */}
+                      <div className="text-[9px] text-slate-300 text-center leading-tight line-clamp-2 px-1 w-full break-words min-h-[24px] flex items-center justify-center font-medium">
                         {def.desc}
                       </div>
 
-                      {/* Footer: Bars only */}
-                      <div className="w-full shrink-0 pt-1">
+                      {/* Footer: Bars */}
+                      <div className="w-full shrink-0 pt-2">
                         <div className="flex gap-1 justify-center">
                           {Array.from({ length: card.maxSlots }).map((_, i) => (
                             <div
                               key={i}
-                              className={`h-1.5 w-full rounded-full border ${i < card.slotsFilled ? "bg-green-500 border-green-400" : "bg-slate-700 border-slate-600"}`}
+                              className={`h-1.5 w-full rounded-full border ${
+                                i < card.slotsFilled
+                                  ? "bg-emerald-500 border-emerald-400 shadow-[0_0_5px_rgba(16,185,129,0.5)]"
+                                  : "bg-slate-700 border-slate-600"
+                              }`}
                             ></div>
                           ))}
                         </div>
@@ -3417,6 +3462,12 @@ export default function Equilibrium() {
                   </button>
                 );
               })}
+
+              {viewingPlayer.animals.length === 0 && (
+                <div className="h-44 w-32 border-2 border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-600 text-xs text-center p-4">
+                  No Animals Drafted
+                </div>
+              )}
             </div>
           </div>
         </div>

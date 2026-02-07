@@ -71,6 +71,21 @@ import {
   Flame, // Fox
   Flower, // Bee
   Vegan,
+  Stone,
+  Cylinder,
+  Cuboid,
+  Grip,
+  Droplet,
+  Sprout,
+  Squirrel,
+  Turtle,
+  PiggyBank,
+  Worm,
+  ChessBishop,
+  ChessKnight,
+  Cone,
+  Panda,
+  Origami,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -123,26 +138,47 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-const FloatingBackground = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black" />
-    <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-    <div className="absolute top-0 left-0 w-full h-full opacity-5">
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute animate-float text-emerald-500"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDuration: `${20 + Math.random() * 20}s`,
-            transform: `scale(${0.5 + Math.random()})`,
-          }}
-        >
-          <Hexagon size={48} />
-        </div>
-      ))}
+const FloatingBackground = ({ isShaking }) => (
+  <div
+    className={`absolute inset-0 overflow-hidden pointer-events-none z-0 ${
+      isShaking ? "animate-shake bg-red-900/20" : ""
+    }`}
+  >
+    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-yellow-900/20 via-gray-950 to-black" />
+    <div className="absolute top-0 left-0 w-full h-full opacity-10">
+      {[...Array(20)].map((_, i) => {
+        const fruitKeys = Object.keys(TOKEN_TYPES);
+        const Icon = TOKEN_TYPES[fruitKeys[i % fruitKeys.length]].icon;
+        return (
+          <div
+            key={i}
+            className="absolute animate-float text-white/60"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDuration: `${10 + Math.random() * 20}s`,
+              transform: `scale(${0.5 + Math.random()})`,
+            }}
+          >
+            <Icon size={32} />
+          </div>
+        );
+      })}
     </div>
+    <style>{`
+      @keyframes float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(10deg); }
+      }
+      .animate-float { animation: float infinite ease-in-out; }
+      
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+      .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    `}</style>
   </div>
 );
 
@@ -155,7 +191,7 @@ const TOKEN_TYPES = {
     id: "WOOD",
     color: "bg-amber-800",
     border: "border-amber-950",
-    icon: MoreHorizontal,
+    icon: Cylinder,
     name: "Log",
     validOn: ["EMPTY", "WOOD"],
     scoreType: "TREE",
@@ -173,7 +209,7 @@ const TOKEN_TYPES = {
     id: "STONE",
     color: "bg-slate-400",
     border: "border-slate-600",
-    icon: Mountain,
+    icon: Stone,
     name: "Stone",
     validOn: ["EMPTY", "STONE"],
     scoreType: "MOUNTAIN",
@@ -182,7 +218,7 @@ const TOKEN_TYPES = {
     id: "WATER",
     color: "bg-cyan-500",
     border: "border-cyan-700",
-    icon: Waves,
+    icon: Droplet,
     name: "Water",
     validOn: ["EMPTY"],
     scoreType: "RIVER",
@@ -191,7 +227,7 @@ const TOKEN_TYPES = {
     id: "SAND",
     color: "bg-yellow-400",
     border: "border-yellow-600",
-    icon: Vegan,
+    icon: Sprout,
     name: "Sand",
     validOn: ["EMPTY"],
     scoreType: "FIELD",
@@ -200,7 +236,7 @@ const TOKEN_TYPES = {
     id: "BRICK",
     color: "bg-red-700",
     border: "border-red-900",
-    icon: Home,
+    icon: Cuboid,
     name: "Brick",
     // CHANGED: Now valid on Empty (for base), Brick, Stone, or Wood
     validOn: ["EMPTY", "BRICK", "STONE", "WOOD"],
@@ -273,7 +309,7 @@ const ANIMALS = {
     desc: "Small Tree (1 Log + Leaf)",
     points: [2, 2, 3],
     slots: 3,
-    icon: Nut,
+    icon: Squirrel,
     iconColor: "text-orange-500",
     visual: { type: "stack", tokens: ["WOOD", "LEAF"] },
     check: (cell) => checkStack(cell, ["WOOD", "LEAF"]),
@@ -323,7 +359,7 @@ const ANIMALS = {
     desc: "Water next to Wood (Log)",
     points: [2, 2, 2],
     slots: 3,
-    icon: Bird,
+    icon: Origami,
     iconColor: "text-green-600",
     visual: { type: "adj", main: ["WATER"], others: [["WOOD"]] },
     check: (cell, board) =>
@@ -336,7 +372,7 @@ const ANIMALS = {
     desc: "Dead Tree (3 Logs)",
     points: [3, 4],
     slots: 2,
-    icon: Feather,
+    icon: Bird,
     iconColor: "text-red-700",
     visual: { type: "stack", tokens: ["WOOD", "WOOD", "WOOD"] },
     check: (cell) => checkStack(cell, ["WOOD", "WOOD", "WOOD"]),
@@ -374,7 +410,7 @@ const ANIMALS = {
     desc: "Log next to Water AND Tree", // Changed to avoid Duck conflict
     points: [3, 3, 4], // Buffed slightly due to extra requirement
     slots: 3,
-    icon: Hammer,
+    icon: Rat,
     iconColor: "text-amber-800",
     visual: {
       type: "adj",
@@ -399,7 +435,7 @@ const ANIMALS = {
     desc: "Water next to Field AND Stone",
     points: [3, 3],
     slots: 2,
-    icon: Shell,
+    icon: Turtle,
     iconColor: "text-teal-600",
     visual: { type: "adj", main: ["WATER"], others: [["SAND"], ["STONE"]] },
     check: (cell, board) => {
@@ -413,14 +449,54 @@ const ANIMALS = {
       );
     },
   },
+  HEDGEHOG: {
+    id: "HEDGEHOG",
+    name: "Hedgehog",
+    desc: "Field next to Wood(1 Log) AND Bush(1 Leaf)",
+    points: [3, 3],
+    slots: 2,
+    icon: Rabbit,
+    iconColor: "text-blue-600",
+    visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["WOOD"]] },
+    check: (cell, board) => {
+      if (cell.stack[0] !== "SAND") return false;
+      const neighbors = getNeighbors(cell.q, cell.r).map(
+        (n) => board[`${n.q},${n.r}`],
+      );
+      return (
+        neighbors.some((n) => n?.stack[0] === "LEAF") &&
+        neighbors.some((n) => n?.stack[0] === "WOOD")
+      );
+    },
+  },
+  SHELL: {
+    id: "SHELL",
+    name: "Shell",
+    desc: "Sand next to Water AND Stone",
+    points: [3, 3],
+    slots: 2,
+    icon: Shell,
+    iconColor: "text-red-600",
+    visual: { type: "adj", main: ["SAND"], others: [["WATER"], ["STONE"]] },
+    check: (cell, board) => {
+      if (cell.stack[0] !== "SAND") return false;
+      const neighbors = getNeighbors(cell.q, cell.r).map(
+        (n) => board[`${n.q},${n.r}`],
+      );
+      return (
+        neighbors.some((n) => n?.stack[0] === "WATER") &&
+        neighbors.some((n) => n?.stack[0] === "STONE")
+      );
+    },
+  },
   BOAR: {
     id: "BOAR",
     name: "Boar",
     desc: "Field next to Water AND Tree",
     points: [3, 3, 3],
     slots: 3,
-    icon: Rat,
-    iconColor: "text-stone-600",
+    icon: PiggyBank,
+    iconColor: "text-amber-900",
     visual: {
       type: "adj",
       main: ["SAND"],
@@ -467,7 +543,7 @@ const ANIMALS = {
     desc: "Medium Rock (2 Stone) next to Medium Wood (2 Log)",
     points: [3, 4],
     slots: 2,
-    icon: Flame,
+    icon: Cat,
     iconColor: "text-orange-600",
     visual: {
       type: "adj",
@@ -486,7 +562,7 @@ const ANIMALS = {
     desc: "Tall Tree (2 Log+Leaf) next to Field",
     points: [3, 3, 4],
     slots: 3,
-    icon: Footprints,
+    icon: Dog,
     iconColor: "text-amber-600",
     visual: { type: "adj", main: ["WOOD", "WOOD", "LEAF"], others: [["SAND"]] },
     check: (cell, board) =>
@@ -499,7 +575,7 @@ const ANIMALS = {
     desc: "Tall Tree (2 Log+Leaf) next to Mountain (2+ Stone)",
     points: [5, 5],
     slots: 2,
-    icon: PawPrint,
+    icon: Panda,
     iconColor: "text-amber-800",
     visual: {
       type: "adj",
@@ -521,8 +597,8 @@ const ANIMALS = {
     desc: "Tall Tree (2 Log+Leaf) next to Water",
     points: [5, 5],
     slots: 2,
-    icon: PawPrint,
-    iconColor: "text-white-900",
+    icon: Panda,
+    iconColor: "text-red-300",
     visual: {
       type: "adj",
       main: ["WOOD", "WOOD", "LEAF"],
@@ -538,7 +614,7 @@ const ANIMALS = {
     desc: "Medium Rock (2 Stone) next to Field",
     points: [3, 3, 3],
     slots: 3,
-    icon: Bug,
+    icon: Snail,
     iconColor: "text-rose-600",
     visual: { type: "adj", main: ["STONE", "STONE"], others: [["SAND"]] },
     check: (cell, board) =>
@@ -574,7 +650,7 @@ const ANIMALS = {
     points: [4, 5],
     slots: 2,
     icon: Moon,
-    iconColor: "text-slate-500",
+    iconColor: "text-orange-500",
     visual: {
       type: "adj",
       main: ["WOOD", "LEAF"],
@@ -618,7 +694,7 @@ const ANIMALS = {
     points: [3, 3, 4, 4],
     slots: 4,
     icon: Rabbit,
-    iconColor: "text-stone-300",
+    iconColor: "text-fuchsia-300",
     visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["LEAF"]] },
     check: (cell, board) => {
       if (cell.stack[0] !== "SAND") return false;
@@ -691,7 +767,7 @@ const ANIMALS = {
     points: [4, 4], // Buffed
     slots: 2,
     icon: Cat,
-    iconColor: "text-slate-300",
+    iconColor: "text-yellow-600",
     visual: {
       type: "adj",
       main: ["BRICK", "BRICK"],
@@ -750,7 +826,7 @@ const ANIMALS = {
     desc: "Line: Leaf -> Leaf -> Leaf",
     points: [2, 2, 3],
     slots: 3,
-    icon: Bug,
+    icon: Worm,
     iconColor: "text-lime-600",
     visual: { type: "line", sequence: [["LEAF"], ["LEAF"], ["LEAF"]] },
     check: (cell, board) => {
@@ -767,7 +843,7 @@ const ANIMALS = {
     desc: "Line: Bush -> Bush -> Stone",
     points: [3, 4],
     slots: 2,
-    icon: Waves,
+    icon: Worm,
     iconColor: "text-emerald-500",
     visual: { type: "line", sequence: [["LEAF"], ["LEAF"], ["STONE"]] },
     check: (cell, board) => {
@@ -784,7 +860,7 @@ const ANIMALS = {
     desc: "Line: Sand -> Sand -> Stone",
     points: [3, 4],
     slots: 2,
-    icon: PawPrint,
+    icon: Flame,
     iconColor: "text-amber-400",
     visual: { type: "line", sequence: [["SAND"], ["SAND"], ["STONE"]] },
     check: (cell, board) => {
@@ -801,8 +877,8 @@ const ANIMALS = {
     desc: "Line: Stone -> Stone -> Field",
     points: [3, 4],
     slots: 2,
-    icon: Crown,
-    iconColor: "text-stone-500",
+    icon: Cone,
+    iconColor: "text-stone-400",
     visual: { type: "line", sequence: [["STONE"], ["STONE"], ["SAND"]] },
     check: (cell, board) => {
       if (cell.stack[0] !== "STONE") return false;
@@ -818,7 +894,7 @@ const ANIMALS = {
     desc: "Line: Water -> Water -> Leaf",
     points: [3, 4],
     slots: 2,
-    icon: Feather,
+    icon: Origami,
     iconColor: "text-pink-400",
     visual: { type: "line", sequence: [["WATER"], ["WATER"], ["LEAF"]] },
     check: (cell, board) => {
@@ -872,7 +948,7 @@ const ANIMALS = {
     desc: "Line: Small Tree -> Tall Tree",
     points: [4, 5],
     slots: 2,
-    icon: PawPrint,
+    icon: Squirrel,
     iconColor: "text-amber-500",
     visual: {
       type: "line",
@@ -894,7 +970,7 @@ const ANIMALS = {
     desc: "Line: Medium Rock -> High Peak",
     points: [4, 5],
     slots: 2,
-    icon: Flame,
+    icon: Cat,
     iconColor: "text-red-600",
     visual: {
       type: "line",
@@ -916,7 +992,7 @@ const ANIMALS = {
     desc: "Line: Tree -> Water -> Tree",
     points: [4, 4],
     slots: 2,
-    icon: Feather,
+    icon: Bird,
     iconColor: "text-cyan-500",
     visual: {
       type: "line",
@@ -936,8 +1012,8 @@ const ANIMALS = {
     desc: "Line: Field -> Tree -> Water",
     points: [4, 5],
     slots: 2,
-    icon: Anchor,
-    iconColor: "text-slate-600",
+    icon: ChessBishop,
+    iconColor: "text-pink-400",
     visual: { type: "line", sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]] },
     check: (cell, board) => {
       if (cell.stack[0] !== "SAND") return false;
@@ -973,7 +1049,7 @@ const ANIMALS = {
     desc: "Line: Bush -> Tall Tree -> Bush",
     points: [4, 4],
     slots: 2,
-    icon: Flame,
+    icon: Cat,
     iconColor: "text-orange-500",
     visual: {
       type: "line",
@@ -993,7 +1069,7 @@ const ANIMALS = {
     desc: "Line: Tree -> Building -> Tree",
     points: [5, 6],
     slots: 2,
-    icon: Flower,
+    icon: Feather,
     iconColor: "text-purple-500",
     visual: {
       type: "line",
@@ -1017,8 +1093,8 @@ const ANIMALS = {
     desc: "High Peak (3 Stone) next to another Stone",
     points: [4, 4],
     slots: 2,
-    icon: Mountain,
-    iconColor: "text-gray-400",
+    icon: Crown,
+    iconColor: "text-orange-400",
     visual: {
       type: "adj",
       main: ["STONE", "STONE", "STONE"],
@@ -1027,6 +1103,30 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE", "STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "STONE"),
+  },
+  HORSE: {
+    id: "HORSE",
+    name: "Horse",
+    desc: "Field next to Field AND Tall Tree (2 Log+Leaf)",
+    points: [3, 3, 3],
+    slots: 3,
+    icon: ChessKnight,
+    iconColor: "text-red-400",
+    visual: {
+      type: "adj",
+      main: ["SAND"],
+      others: [["SAND"], ["WOOD", "WOOD", "LEAF"]],
+    },
+    check: (cell, board) => {
+      if (cell.stack[0] !== "SAND") return false;
+      const neighbors = getNeighbors(cell.q, cell.r).map(
+        (n) => board[`${n.q},${n.r}`],
+      );
+      return (
+        neighbors.some((n) => n?.stack[0] === "SAND") &&
+        neighbors.some((n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]))
+      );
+    },
   },
 };
 
@@ -1335,22 +1435,24 @@ const PatternPreview = ({ visual }) => {
 
   // 1. Vertical Stack Preview
   if (visual.type === "stack") {
-    return <TokenStackVisual tokens={visual.tokens} />;
+    return <TokenStackVisual tokens={visual.tokens} spacing={5} />;
   }
 
   // 2. Adjacency Preview (Cluster)
   if (visual.type === "adj") {
     return (
-      <div className="flex items-end justify-center gap-2 py-2">
+      // CHANGED: Removed 'py-2' to save vertical space
+      <div className="flex items-end justify-center gap-2">
         {/* Main Center Token */}
         <div className="relative z-10 border-2 border-white/50 rounded-xl p-1 bg-black/20">
           <TokenStackVisual
             tokens={Array.isArray(visual.main) ? visual.main : [visual.main]}
             scale={0.9}
+            spacing={5} // CHANGED: Tighter spacing
           />
           {/* Center Indicator Dot */}
-          <div className="absolute -top-2 -right-2 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-slate-500 shadow">
-            <div className="w-1.5 h-1.5 bg-slate-900 rounded-full"></div>
+          <div className="absolute -top-2 -right-2 w-3 h-3 bg-white rounded-full flex items-center justify-center border border-slate-500 shadow">
+            <div className="w-1 h-1 bg-slate-900 rounded-full"></div>
           </div>
         </div>
 
@@ -1361,6 +1463,7 @@ const PatternPreview = ({ visual }) => {
               <TokenStackVisual
                 tokens={Array.isArray(tArr) ? tArr : [tArr]}
                 scale={0.8}
+                spacing={5} // CHANGED: Tighter spacing
               />
             </div>
           ))}
@@ -1369,13 +1472,13 @@ const PatternPreview = ({ visual }) => {
     );
   }
 
-  // 3. --- NEW: Linear Preview (A -> B -> C) ---
+  // 3. Linear Preview
   if (visual.type === "line") {
     return (
-      <div className="flex items-center justify-center gap-1 py-2">
+      // CHANGED: 'py-2' to 'py-4'
+      <div className="flex items-center justify-center gap-1 py-4">
         {visual.sequence.map((tokens, i) => (
           <React.Fragment key={i}>
-            {/* Arrow between items */}
             {i > 0 && (
               <div className="text-slate-500 opacity-50">
                 <SkipForward size={10} />
@@ -1385,7 +1488,6 @@ const PatternPreview = ({ visual }) => {
             <div
               className={`relative ${i === 0 ? "z-10 scale-100" : "opacity-80 scale-90"}`}
             >
-              {/* Highlight the start of the line */}
               {i === 0 && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center border border-slate-500 shadow z-20">
                   <div className="w-1 h-1 bg-slate-900 rounded-full"></div>
@@ -1395,6 +1497,7 @@ const PatternPreview = ({ visual }) => {
               <TokenStackVisual
                 tokens={Array.isArray(tokens) ? tokens : [tokens]}
                 scale={0.7}
+                spacing={5} // CHANGED: Tighter spacing
               />
             </div>
           </React.Fragment>
@@ -1620,9 +1723,9 @@ const RulesModal = ({ onClose }) => (
                 Trees (Wood + Foliage)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
+                <li>1 Leaf alone (Bush): 1 Pt</li>
                 <li>2 High (1 Log + 1 Leaf): 3 Pts</li>
                 <li>3 High (2 Log + 2 Leaf): 7 Pts</li>
-                <li>1 Leaf alone (Bush): 1 Pt</li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
@@ -2601,7 +2704,7 @@ export default function Equilibrium() {
   if (!user)
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-emerald-500 animate-pulse">
-        Initializing Ecosystem...
+        Returning to the wild...
       </div>
     );
 
@@ -2614,8 +2717,8 @@ export default function Equilibrium() {
         <div className="bg-slate-900/80 backdrop-blur p-8 rounded-2xl border border-slate-700 shadow-2xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
           <Loader size={48} className="text-emerald-500 animate-spin" />
           <div className="text-center">
-            <h2 className="text-xl font-bold">Resuming Session...</h2>
-            <p className="text-slate-400 text-sm">Returning to the wild</p>
+            <h2 className="text-xl font-bold">Reconnecting...</h2>
+            <p className="text-slate-400 text-sm">Resuming your session</p>
           </div>
         </div>
       </div>
@@ -2891,6 +2994,7 @@ export default function Equilibrium() {
     return (
       <div className="fixed inset-0 bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
         <GlobalStyles />
+        <FloatingBackground />
         {feedback && (
           <FeedbackOverlay
             type={feedback.type}
@@ -3020,7 +3124,7 @@ export default function Equilibrium() {
           </div>
         )}
 
-        <div className="flex-1 relative bg-slate-950 overflow-hidden flex flex-col items-center justify-center">
+        <div className="flex-1 relative bg-transparent overflow-hidden flex flex-col items-center justify-center">
           {/* OPPONENT TABS */}
           <div className="absolute top-2 md:top-4 left-0 right-0 z-10 grid grid-cols-4 gap-1 px-2 w-full max-w-2xl mx-auto pointer-events-auto">
             {gameState.players.map((p, i) => {

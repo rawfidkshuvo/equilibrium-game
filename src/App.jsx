@@ -2805,30 +2805,33 @@ export default function Equilibrium() {
             )}
           </div>
           {/* --- HOST CONTROLS --- */}
+          {/* --- HOST CONTROLS (Solo Play Fixed) --- */}
           {isHost && (
             <div className="mt-8 flex flex-col items-center gap-2">
               <button
                 onClick={startGame}
-                disabled={gameState.players.length < 2}
-                // CHANGED: Reduced padding (px-8 py-3) and font size (text-lg)
+                // CHECK 1: Ensure this is < 1 (Controls clickability)
+                disabled={gameState.players.length < 1}
                 className={`
                   px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all
                   ${
-                    gameState.players.length < 2
+                    // CHECK 2: Ensure this is < 1 (Controls visual style)
+                    gameState.players.length < 1
                       ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-                      : "bg-emerald-500 text-white-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
+                      : "bg-emerald-500 text-slate-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
                   }
                 `}
               >
-                {gameState.players.length < 2
+                {/* CHECK 3: Ensure this is < 1 (Controls the text you see) */}
+                {gameState.players.length < 1
                   ? "Waiting for Architects..."
                   : "CREATE WORLD"}
               </button>
 
-              {/* Helper Text */}
-              {gameState.players.length < 2 && (
+              {/* Helper Message */}
+              {gameState.players.length < 1 && (
                 <p className="text-slate-600 text-xs uppercase tracking-widest font-bold">
-                  Need 2+ players
+                  Need 1+ player
                 </p>
               )}
             </div>

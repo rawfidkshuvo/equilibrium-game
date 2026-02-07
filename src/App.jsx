@@ -301,13 +301,14 @@ const checkLine = (board, q, r, predicates) => {
 };
 
 const ANIMALS = {
-  // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy) ---
+  // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy / Low Value) ---
+  // Strategies: Quick filler points, low investment.
 
   SQUIRREL: {
     id: "SQUIRREL",
     name: "Squirrel",
     desc: "Small Tree (1 Log + Leaf)",
-    points: [2, 2, 3],
+    points: [2, 2, 2], // Simple 2-token stack. Reliable, low score.
     slots: 3,
     icon: Squirrel,
     iconColor: "text-orange-500",
@@ -318,7 +319,7 @@ const ANIMALS = {
     id: "LIZARD",
     name: "Lizard",
     desc: "Small Rock (Stone) next to Bush (Leaf)",
-    points: [2, 2, 2],
+    points: [2, 2, 2], // 2 tokens, very flexible.
     slots: 3,
     icon: Rat,
     iconColor: "text-emerald-400",
@@ -370,7 +371,7 @@ const ANIMALS = {
     id: "HAWK",
     name: "Hawk",
     desc: "Dead Tree (3 Logs)",
-    points: [3, 4],
+    points: [3, 4], // 3 tokens required. Moderate investment.
     slots: 2,
     icon: Bird,
     iconColor: "text-red-700",
@@ -381,7 +382,7 @@ const ANIMALS = {
     id: "EAGLE",
     name: "Eagle",
     desc: "Highest Peak (3 Stone)",
-    points: [3, 4],
+    points: [3, 4], // 3 tokens required.
     slots: 2,
     icon: Target,
     iconColor: "text-sky-600",
@@ -389,13 +390,14 @@ const ANIMALS = {
     check: (cell) => checkStack(cell, ["STONE", "STONE", "STONE"]),
   },
 
-  // --- TIER 2: COMPLEX ADJACENCY (Medium) ---
+  // --- TIER 2: COMPLEX ADJACENCY (Medium Value) ---
+  // Strategies: Requires 3-4 tokens and specific adjacent pairs.
 
   FROG: {
     id: "FROG",
     name: "Frog",
     desc: "Bush (Leaf) next to Water",
-    points: [2, 2, 2, 3],
+    points: [2, 2, 2, 3], // Very easy to make (2 tokens), but occupies a valuable leaf.
     slots: 4,
     icon: Clover,
     iconColor: "text-lime-500",
@@ -407,9 +409,9 @@ const ANIMALS = {
   BEAVER: {
     id: "BEAVER",
     name: "Beaver",
-    desc: "Log next to Water AND Tree", // Changed to avoid Duck conflict
-    points: [3, 3, 4], // Buffed slightly due to extra requirement
-    slots: 3,
+    desc: "Log next to Water AND Tree",
+    points: [4, 5], // Buffed: Requires 4 tokens total (Log+Water+Log+Leaf).
+    slots: 2,
     icon: Rat,
     iconColor: "text-amber-800",
     visual: {
@@ -433,7 +435,7 @@ const ANIMALS = {
     id: "TURTLE",
     name: "Turtle",
     desc: "Water next to Field AND Stone",
-    points: [3, 3],
+    points: [3, 3], // 3 tokens. Easy base tiles.
     slots: 2,
     icon: Turtle,
     iconColor: "text-teal-600",
@@ -453,7 +455,7 @@ const ANIMALS = {
     id: "HEDGEHOG",
     name: "Hedgehog",
     desc: "Field next to Wood(1 Log) AND Bush(1 Leaf)",
-    points: [3, 3],
+    points: [3, 4], // Buffed slightly: 3 tokens, but specific types.
     slots: 2,
     icon: Rabbit,
     iconColor: "text-blue-600",
@@ -473,7 +475,7 @@ const ANIMALS = {
     id: "SHELL",
     name: "Shell",
     desc: "Sand next to Water AND Stone",
-    points: [3, 3],
+    points: [3, 3], // 3 Base tokens.
     slots: 2,
     icon: Shell,
     iconColor: "text-red-600",
@@ -493,7 +495,7 @@ const ANIMALS = {
     id: "BOAR",
     name: "Boar",
     desc: "Field next to Water AND Tree",
-    points: [3, 3, 3],
+    points: [4, 4, 5], // Buffed: Requires 4 tokens (Sand+Water+Log+Leaf).
     slots: 3,
     icon: PiggyBank,
     iconColor: "text-amber-900",
@@ -517,7 +519,7 @@ const ANIMALS = {
     id: "ANTS",
     name: "Ants",
     desc: "Field next to Bush(1 Leaf) AND Tree",
-    points: [3, 3, 3],
+    points: [4, 4, 5], // Buffed: Requires 4 tokens.
     slots: 3,
     icon: Bug,
     iconColor: "text-amber-600",
@@ -541,7 +543,7 @@ const ANIMALS = {
     id: "FOX",
     name: "Fox",
     desc: "Medium Rock (2 Stone) next to Medium Wood (2 Log)",
-    points: [3, 4],
+    points: [4, 5], // Buffed: Requires 4 specific tokens in stacks.
     slots: 2,
     icon: Cat,
     iconColor: "text-orange-600",
@@ -560,11 +562,15 @@ const ANIMALS = {
     id: "DEER",
     name: "Deer",
     desc: "Tall Tree (2 Log+Leaf) next to Field",
-    points: [3, 3, 4],
+    points: [4, 5, 5], // Buffed: Tall trees are hard (3 high). 4 tokens total.
     slots: 3,
     icon: Dog,
     iconColor: "text-amber-600",
-    visual: { type: "adj", main: ["WOOD", "WOOD", "LEAF"], others: [["SAND"]] },
+    visual: {
+      type: "adj",
+      main: ["WOOD", "WOOD", "LEAF"],
+      others: [["SAND"]],
+    },
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "SAND"),
@@ -573,7 +579,7 @@ const ANIMALS = {
     id: "BEAR",
     name: "Bear",
     desc: "Tall Tree (2 Log+Leaf) next to Mountain (2+ Stone)",
-    points: [5, 5],
+    points: [5, 6], // Buffed: Requires 5+ tokens. Very expensive.
     slots: 2,
     icon: Panda,
     iconColor: "text-amber-800",
@@ -595,7 +601,7 @@ const ANIMALS = {
     id: "PANDA",
     name: "Panda",
     desc: "Tall Tree (2 Log+Leaf) next to Water",
-    points: [5, 5],
+    points: [5, 5], // High value: Requires max height tree + water.
     slots: 2,
     icon: Panda,
     iconColor: "text-red-300",
@@ -612,7 +618,7 @@ const ANIMALS = {
     id: "SCORPION",
     name: "Scorpion",
     desc: "Medium Rock (2 Stone) next to Field",
-    points: [3, 3, 3],
+    points: [3, 3, 3], // 3 tokens. Standard complexity.
     slots: 3,
     icon: Snail,
     iconColor: "text-rose-600",
@@ -622,13 +628,14 @@ const ANIMALS = {
       checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "SAND"),
   },
 
-  // --- TIER 3: CLUSTERS & SURROUNDED (Hard) ---
+  // --- TIER 3: CLUSTERS & SURROUNDED (Hard / High Value) ---
+  // Strategies: High token count (6+ tokens) or difficult surroundings.
 
   BEE: {
     id: "BEE",
     name: "Bee",
     desc: "Bush (Leaf) next to 2 other Bushes",
-    points: [2, 2, 3],
+    points: [2, 3, 3], // 3 tokens, but Leafs are high demand.
     slots: 3,
     icon: Flower,
     iconColor: "text-yellow-400",
@@ -647,7 +654,7 @@ const ANIMALS = {
     id: "WOLF",
     name: "Wolf",
     desc: "Tree (1 Log+Leaf) next to 2 other Trees",
-    points: [4, 5],
+    points: [6, 7], // HUGE BUFF: Requires 3 Trees = 6 Tokens! Hardest adjacency.
     slots: 2,
     icon: Moon,
     iconColor: "text-orange-500",
@@ -673,7 +680,7 @@ const ANIMALS = {
     id: "SALMON",
     name: "Salmon",
     desc: "Water next to 2 other Water tiles",
-    points: [2, 2, 3],
+    points: [3, 3, 3], // 3 tokens. Simple to draft.
     slots: 3,
     icon: Fish,
     iconColor: "text-rose-400",
@@ -691,7 +698,7 @@ const ANIMALS = {
     id: "RABBIT",
     name: "Rabbit",
     desc: "Field next to 2 Bushes",
-    points: [3, 3, 4, 4],
+    points: [3, 4, 4, 4], // 3 tokens.
     slots: 4,
     icon: Rabbit,
     iconColor: "text-fuchsia-300",
@@ -710,7 +717,7 @@ const ANIMALS = {
     id: "PENGUIN",
     name: "Penguin",
     desc: "Stone next to 2 Water tiles",
-    points: [3, 3, 4, 4],
+    points: [3, 3, 4, 4], // 3 tokens.
     slots: 4,
     icon: Bird,
     iconColor: "text-cyan-300",
@@ -729,7 +736,7 @@ const ANIMALS = {
     id: "MOLE",
     name: "Mole",
     desc: "Stone next to 2 Fields",
-    points: [3, 3, 4, 4],
+    points: [3, 3, 4, 4], // 3 tokens.
     slots: 4,
     icon: Rat,
     iconColor: "text-amber-700",
@@ -745,13 +752,14 @@ const ANIMALS = {
     },
   },
 
-  // --- TIER 4: BUILDINGS (Very Hard) ---
+  // --- TIER 4: BUILDINGS (Very Hard / Highest Value) ---
+  // Strategies: Requires scarce "Brick" tokens and height 2.
 
   BAT: {
     id: "BAT",
     name: "Bat",
     desc: "Building next to Water",
-    points: [3, 3, 3],
+    points: [4, 4, 5], // Buffed: Building creation is risky.
     slots: 3,
     icon: Ghost,
     iconColor: "text-violet-400",
@@ -764,7 +772,7 @@ const ANIMALS = {
     id: "CAT",
     name: "Cat",
     desc: "Building next to 2 Fields",
-    points: [4, 4], // Buffed
+    points: [5, 6], // Buffed: Requires 4 tokens + Building.
     slots: 2,
     icon: Cat,
     iconColor: "text-yellow-600",
@@ -787,7 +795,7 @@ const ANIMALS = {
     id: "OWL",
     name: "Owl",
     desc: "Tall Tree (2 Log+Leaf) next to Building",
-    points: [5, 5],
+    points: [6, 7], // Max Value: Requires two 3-height structures adjacent.
     slots: 2,
     icon: Eye,
     iconColor: "text-indigo-400",
@@ -804,7 +812,7 @@ const ANIMALS = {
     id: "SPIDER",
     name: "Spider",
     desc: "Dead Tree (3 Log) next to Building",
-    points: [5, 5],
+    points: [6, 6], // Buffed: Dead trees use 3 wood, expensive.
     slots: 2,
     icon: Snowflake,
     iconColor: "text-red-900",
@@ -818,13 +826,14 @@ const ANIMALS = {
       checkAnyNeighbor(board, cell.q, cell.r, (n) => isBuilding(n)),
   },
 
-  // --- TIER 5: LINEAR (Spatial Puzzle) ---
+  // --- TIER 5: LINEAR (Spatial Puzzle / Medium Value) ---
+  // Strategies: Lines are geometrically restrictive but often use cheaper tokens.
 
   CATERPILLAR: {
     id: "CATERPILLAR",
     name: "Caterpillar",
     desc: "Line: Leaf -> Leaf -> Leaf",
-    points: [2, 2, 3],
+    points: [3, 3, 3], // 3 tokens, simple but uses high-demand Leafs.
     slots: 3,
     icon: Worm,
     iconColor: "text-lime-600",
@@ -909,7 +918,7 @@ const ANIMALS = {
     id: "CRANE",
     name: "Crane",
     desc: "Line: Water -> Log -> Water",
-    points: [3, 3],
+    points: [3, 3], // 3 Tokens. Very specific "bridge" pattern.
     slots: 2,
     icon: Bird,
     iconColor: "text-red-400",
@@ -926,7 +935,7 @@ const ANIMALS = {
     id: "OCTOPUS",
     name: "Octopus",
     desc: "Line: Water -> Stone -> Water",
-    points: [3, 3], // Nerfed slightly
+    points: [3, 3],
     slots: 2,
     icon: Snowflake,
     iconColor: "text-indigo-600",
@@ -940,13 +949,14 @@ const ANIMALS = {
     },
   },
 
-  // --- TIER 6: LINEAR & STACKS (Expert) ---
+  // --- TIER 6: EXPERT LINEAR (Stacks + Lines / Highest Complexity) ---
+  // Strategies: Lines that require specific heights. Hardest to draft for.
 
   MONKEY: {
     id: "MONKEY",
     name: "Monkey",
     desc: "Line: Small Tree -> Tall Tree",
-    points: [4, 5],
+    points: [5, 6], // Buffed: 5 tokens total (2+3).
     slots: 2,
     icon: Squirrel,
     iconColor: "text-amber-500",
@@ -968,7 +978,7 @@ const ANIMALS = {
     id: "COUGAR",
     name: "Cougar",
     desc: "Line: Medium Rock -> High Peak",
-    points: [4, 5],
+    points: [5, 6], // Buffed: 5 tokens total (2+3).
     slots: 2,
     icon: Cat,
     iconColor: "text-red-600",
@@ -990,7 +1000,7 @@ const ANIMALS = {
     id: "KINGFISHER",
     name: "Kingfisher",
     desc: "Line: Tree -> Water -> Tree",
-    points: [4, 4],
+    points: [5, 5], // Buffed: 5 tokens. Two trees is a big ask.
     slots: 2,
     icon: Bird,
     iconColor: "text-cyan-500",
@@ -1010,11 +1020,14 @@ const ANIMALS = {
     id: "ELEPHANT",
     name: "Elephant",
     desc: "Line: Field -> Tree -> Water",
-    points: [4, 5],
+    points: [4, 5], // 4 tokens. Fair complexity.
     slots: 2,
     icon: ChessBishop,
     iconColor: "text-pink-400",
-    visual: { type: "line", sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]] },
+    visual: {
+      type: "line",
+      sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]],
+    },
     check: (cell, board) => {
       if (cell.stack[0] !== "SAND") return false;
       return checkLine(board, cell.q, cell.r, [
@@ -1027,7 +1040,7 @@ const ANIMALS = {
     id: "GIRAFFE",
     name: "Giraffe",
     desc: "Line: Tree -> Bush -> Building",
-    points: [5, 6],
+    points: [5, 6], // 5 tokens + Building constraint.
     slots: 2,
     icon: Footprints,
     iconColor: "text-yellow-600",
@@ -1047,7 +1060,7 @@ const ANIMALS = {
     id: "TIGER",
     name: "Tiger",
     desc: "Line: Bush -> Tall Tree -> Bush",
-    points: [4, 4],
+    points: [5, 5], // Buffed: 5 tokens. Tall tree is a bottleneck.
     slots: 2,
     icon: Cat,
     iconColor: "text-orange-500",
@@ -1067,7 +1080,7 @@ const ANIMALS = {
     id: "PEACOCK",
     name: "Peacock",
     desc: "Line: Tree -> Building -> Tree",
-    points: [5, 6],
+    points: [6, 7], // Very Hard: 6 tokens + Building.
     slots: 2,
     icon: Feather,
     iconColor: "text-purple-500",
@@ -1091,7 +1104,7 @@ const ANIMALS = {
     id: "GOAT",
     name: "Goat",
     desc: "High Peak (3 Stone) next to another Stone",
-    points: [4, 4],
+    points: [4, 5], // 4 tokens. 3-height stack is the main cost.
     slots: 2,
     icon: Crown,
     iconColor: "text-orange-400",
@@ -1108,7 +1121,7 @@ const ANIMALS = {
     id: "HORSE",
     name: "Horse",
     desc: "Field next to Field AND Tall Tree (2 Log+Leaf)",
-    points: [3, 3, 3],
+    points: [4, 5, 5], // Buffed: 5 tokens total. Requires planning.
     slots: 3,
     icon: ChessKnight,
     iconColor: "text-red-400",
@@ -1124,7 +1137,9 @@ const ANIMALS = {
       );
       return (
         neighbors.some((n) => n?.stack[0] === "SAND") &&
-        neighbors.some((n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]))
+        neighbors.some(
+          (n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]),
+        )
       );
     },
   },

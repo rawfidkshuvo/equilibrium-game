@@ -300,30 +300,38 @@ const checkLine = (board, q, r, predicates) => {
   });
 };
 
+// HELPER: Gets the visible token type (Top of stack)
+// Returns null if empty.
+const getTop = (cell) => {
+  if (!cell || cell.stack.length === 0) return null;
+  return cell.stack[cell.stack.length - 1];
+};
+
 const ANIMALS = {
-  // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy / Low Value) ---
-  // Strategies: Quick filler points, low investment.
+  // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy) ---
 
   SQUIRREL: {
     id: "SQUIRREL",
     name: "Squirrel",
     desc: "Small Tree (1 Log + Leaf)",
-    points: [2, 2, 2], // Simple 2-token stack. Reliable, low score.
+    points: [2, 2, 2],
     slots: 3,
     icon: Squirrel,
     iconColor: "text-orange-500",
     visual: { type: "stack", tokens: ["WOOD", "LEAF"] },
+    // Full Proof: Exact stack match required.
     check: (cell) => checkStack(cell, ["WOOD", "LEAF"]),
   },
   LIZARD: {
     id: "LIZARD",
     name: "Lizard",
     desc: "Small Rock (Stone) next to Bush (Leaf)",
-    points: [2, 2, 2], // 2 tokens, very flexible.
+    points: [2, 2, 2],
     slots: 3,
     icon: Rat,
     iconColor: "text-emerald-400",
     visual: { type: "adj", main: ["STONE"], others: [["LEAF"]] },
+    // Full Proof: Exact stack matches required.
     check: (cell, board) =>
       checkStack(cell, ["STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["LEAF"])),
@@ -337,9 +345,10 @@ const ANIMALS = {
     icon: Snail,
     iconColor: "text-lime-300",
     visual: { type: "adj", main: ["STONE"], others: [["WATER"]] },
+    // Full Proof: Exact Stone stack, neighbor must have Water on TOP.
     check: (cell, board) =>
       checkStack(cell, ["STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
   },
   HERON: {
     id: "HERON",
@@ -351,7 +360,7 @@ const ANIMALS = {
     iconColor: "text-cyan-300",
     visual: { type: "adj", main: ["WATER"], others: [["LEAF"]] },
     check: (cell, board) =>
-      cell.stack[0] === "WATER" &&
+      getTop(cell) === "WATER" &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["LEAF"])),
   },
   DUCK: {
@@ -364,14 +373,14 @@ const ANIMALS = {
     iconColor: "text-green-600",
     visual: { type: "adj", main: ["WATER"], others: [["WOOD"]] },
     check: (cell, board) =>
-      cell.stack[0] === "WATER" &&
+      getTop(cell) === "WATER" &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WOOD"])),
   },
   HAWK: {
     id: "HAWK",
     name: "Hawk",
     desc: "Dead Tree (3 Logs)",
-    points: [3, 4], // 3 tokens required. Moderate investment.
+    points: [3, 4],
     slots: 2,
     icon: Bird,
     iconColor: "text-red-700",
@@ -382,7 +391,7 @@ const ANIMALS = {
     id: "EAGLE",
     name: "Eagle",
     desc: "Highest Peak (3 Stone)",
-    points: [3, 4], // 3 tokens required.
+    points: [3, 4],
     slots: 2,
     icon: Target,
     iconColor: "text-sky-600",
@@ -390,27 +399,26 @@ const ANIMALS = {
     check: (cell) => checkStack(cell, ["STONE", "STONE", "STONE"]),
   },
 
-  // --- TIER 2: COMPLEX ADJACENCY (Medium Value) ---
-  // Strategies: Requires 3-4 tokens and specific adjacent pairs.
+  // --- TIER 2: COMPLEX ADJACENCY (Medium) ---
 
   FROG: {
     id: "FROG",
     name: "Frog",
     desc: "Bush (Leaf) next to Water",
-    points: [2, 2, 2, 3], // Very easy to make (2 tokens), but occupies a valuable leaf.
+    points: [2, 2, 2, 3],
     slots: 4,
     icon: Clover,
     iconColor: "text-lime-500",
     visual: { type: "adj", main: ["LEAF"], others: [["WATER"]] },
     check: (cell, board) =>
       checkStack(cell, ["LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
   },
   BEAVER: {
     id: "BEAVER",
     name: "Beaver",
     desc: "Log next to Water AND Tree",
-    points: [4, 5], // Buffed: Requires 4 tokens total (Log+Water+Log+Leaf).
+    points: [4, 5],
     slots: 2,
     icon: Rat,
     iconColor: "text-amber-800",
@@ -424,7 +432,7 @@ const ANIMALS = {
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
-      const hasWater = neighbors.some((n) => n && n.stack[0] === "WATER");
+      const hasWater = neighbors.some((n) => getTop(n) === "WATER");
       const hasTree = neighbors.some(
         (n) => n && checkStack(n, ["WOOD", "LEAF"]),
       );
@@ -435,19 +443,20 @@ const ANIMALS = {
     id: "TURTLE",
     name: "Turtle",
     desc: "Water next to Field AND Stone",
-    points: [3, 3], // 3 tokens. Easy base tiles.
+    points: [3, 3],
     slots: 2,
     icon: Turtle,
     iconColor: "text-teal-600",
     visual: { type: "adj", main: ["WATER"], others: [["SAND"], ["STONE"]] },
+    // FIXED: Now checks getTop to prevent buildings counting as stone/sand
     check: (cell, board) => {
-      if (cell.stack[0] !== "WATER") return false;
+      if (getTop(cell) !== "WATER") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "SAND") &&
-        neighbors.some((n) => n?.stack[0] === "STONE")
+        neighbors.some((n) => getTop(n) === "SAND") &&
+        neighbors.some((n) => getTop(n) === "STONE")
       );
     },
   },
@@ -455,19 +464,19 @@ const ANIMALS = {
     id: "HEDGEHOG",
     name: "Hedgehog",
     desc: "Field next to Wood(1 Log) AND Bush(1 Leaf)",
-    points: [3, 4], // Buffed slightly: 3 tokens, but specific types.
+    points: [3, 4],
     slots: 2,
     icon: Rabbit,
     iconColor: "text-blue-600",
     visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["WOOD"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "LEAF") &&
-        neighbors.some((n) => n?.stack[0] === "WOOD")
+        neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
+        neighbors.some((n) => n && checkStack(n, ["WOOD"]))
       );
     },
   },
@@ -475,19 +484,19 @@ const ANIMALS = {
     id: "SHELL",
     name: "Shell",
     desc: "Sand next to Water AND Stone",
-    points: [3, 3], // 3 Base tokens.
+    points: [3, 3],
     slots: 2,
     icon: Shell,
     iconColor: "text-red-600",
     visual: { type: "adj", main: ["SAND"], others: [["WATER"], ["STONE"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "WATER") &&
-        neighbors.some((n) => n?.stack[0] === "STONE")
+        neighbors.some((n) => getTop(n) === "WATER") &&
+        neighbors.some((n) => getTop(n) === "STONE")
       );
     },
   },
@@ -495,7 +504,7 @@ const ANIMALS = {
     id: "BOAR",
     name: "Boar",
     desc: "Field next to Water AND Tree",
-    points: [4, 4, 5], // Buffed: Requires 4 tokens (Sand+Water+Log+Leaf).
+    points: [4, 4, 5],
     slots: 3,
     icon: PiggyBank,
     iconColor: "text-amber-900",
@@ -505,12 +514,12 @@ const ANIMALS = {
       others: [["WATER"], ["WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "WATER") &&
+        neighbors.some((n) => getTop(n) === "WATER") &&
         neighbors.some((n) => n && checkStack(n, ["WOOD", "LEAF"]))
       );
     },
@@ -519,7 +528,7 @@ const ANIMALS = {
     id: "ANTS",
     name: "Ants",
     desc: "Field next to Bush(1 Leaf) AND Tree",
-    points: [4, 4, 5], // Buffed: Requires 4 tokens.
+    points: [4, 4, 5],
     slots: 3,
     icon: Bug,
     iconColor: "text-amber-600",
@@ -529,12 +538,12 @@ const ANIMALS = {
       others: [["LEAF"], ["WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "LEAF") &&
+        neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
         neighbors.some((n) => n && checkStack(n, ["WOOD", "LEAF"]))
       );
     },
@@ -543,7 +552,7 @@ const ANIMALS = {
     id: "FOX",
     name: "Fox",
     desc: "Medium Rock (2 Stone) next to Medium Wood (2 Log)",
-    points: [4, 5], // Buffed: Requires 4 specific tokens in stacks.
+    points: [4, 5],
     slots: 2,
     icon: Cat,
     iconColor: "text-orange-600",
@@ -562,7 +571,7 @@ const ANIMALS = {
     id: "DEER",
     name: "Deer",
     desc: "Tall Tree (2 Log+Leaf) next to Field",
-    points: [4, 5, 5], // Buffed: Tall trees are hard (3 high). 4 tokens total.
+    points: [4, 5, 5],
     slots: 3,
     icon: Dog,
     iconColor: "text-amber-600",
@@ -573,13 +582,13 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "SAND"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "SAND"),
   },
   BEAR: {
     id: "BEAR",
     name: "Bear",
     desc: "Tall Tree (2 Log+Leaf) next to Mountain (2+ Stone)",
-    points: [5, 6], // Buffed: Requires 5+ tokens. Very expensive.
+    points: [5, 6],
     slots: 2,
     icon: Panda,
     iconColor: "text-amber-800",
@@ -588,20 +597,21 @@ const ANIMALS = {
       main: ["WOOD", "WOOD", "LEAF"],
       others: [["STONE", "STONE"]],
     },
+    // FIXED: Checks length AND ensures top is Stone (not brick)
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
       checkAnyNeighbor(
         board,
         cell.q,
         cell.r,
-        (n) => n.stack.length >= 2 && n.stack[0] === "STONE",
+        (n) => n && n.stack.length >= 2 && getTop(n) === "STONE",
       ),
   },
   PANDA: {
     id: "PANDA",
     name: "Panda",
     desc: "Tall Tree (2 Log+Leaf) next to Water",
-    points: [5, 5], // High value: Requires max height tree + water.
+    points: [5, 5],
     slots: 2,
     icon: Panda,
     iconColor: "text-red-300",
@@ -612,30 +622,29 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
   },
   SCORPION: {
     id: "SCORPION",
     name: "Scorpion",
     desc: "Medium Rock (2 Stone) next to Field",
-    points: [3, 3, 3], // 3 tokens. Standard complexity.
+    points: [3, 3, 3],
     slots: 3,
     icon: Snail,
     iconColor: "text-rose-600",
     visual: { type: "adj", main: ["STONE", "STONE"], others: [["SAND"]] },
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "SAND"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "SAND"),
   },
 
-  // --- TIER 3: CLUSTERS & SURROUNDED (Hard / High Value) ---
-  // Strategies: High token count (6+ tokens) or difficult surroundings.
+  // --- TIER 3: CLUSTERS & SURROUNDED (Hard) ---
 
   BEE: {
     id: "BEE",
     name: "Bee",
     desc: "Bush (Leaf) next to 2 other Bushes",
-    points: [2, 3, 3], // 3 tokens, but Leafs are high demand.
+    points: [2, 3, 3],
     slots: 3,
     icon: Flower,
     iconColor: "text-yellow-400",
@@ -654,7 +663,7 @@ const ANIMALS = {
     id: "WOLF",
     name: "Wolf",
     desc: "Tree (1 Log+Leaf) next to 2 other Trees",
-    points: [6, 7], // HUGE BUFF: Requires 3 Trees = 6 Tokens! Hardest adjacency.
+    points: [6, 7],
     slots: 2,
     icon: Moon,
     iconColor: "text-orange-500",
@@ -680,16 +689,16 @@ const ANIMALS = {
     id: "SALMON",
     name: "Salmon",
     desc: "Water next to 2 other Water tiles",
-    points: [3, 3, 3], // 3 tokens. Simple to draft.
+    points: [3, 3, 3],
     slots: 3,
     icon: Fish,
     iconColor: "text-rose-400",
     visual: { type: "adj", main: ["WATER"], others: [["WATER"], ["WATER"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "WATER") return false;
+      if (getTop(cell) !== "WATER") return false;
       let waters = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
-        if (board[`${n.q},${n.r}`]?.stack[0] === "WATER") waters++;
+        if (getTop(board[`${n.q},${n.r}`]) === "WATER") waters++;
       });
       return waters >= 2;
     },
@@ -698,13 +707,13 @@ const ANIMALS = {
     id: "RABBIT",
     name: "Rabbit",
     desc: "Field next to 2 Bushes",
-    points: [3, 4, 4, 4], // 3 tokens.
+    points: [3, 4, 4, 4],
     slots: 4,
     icon: Rabbit,
     iconColor: "text-fuchsia-300",
     visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["LEAF"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       let bushes = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
@@ -717,17 +726,18 @@ const ANIMALS = {
     id: "PENGUIN",
     name: "Penguin",
     desc: "Stone next to 2 Water tiles",
-    points: [3, 3, 4, 4], // 3 tokens.
+    points: [3, 3, 4, 4],
     slots: 4,
     icon: Bird,
     iconColor: "text-cyan-300",
     visual: { type: "adj", main: ["STONE"], others: [["WATER"], ["WATER"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "STONE") return false;
+      // FIXED: Ensure Main is Top Stone
+      if (getTop(cell) !== "STONE") return false;
       let waters = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (neighbor && checkStack(neighbor, ["WATER"])) waters++;
+        if (getTop(neighbor) === "WATER") waters++;
       });
       return waters >= 2;
     },
@@ -736,43 +746,42 @@ const ANIMALS = {
     id: "MOLE",
     name: "Mole",
     desc: "Stone next to 2 Fields",
-    points: [3, 3, 4, 4], // 3 tokens.
+    points: [3, 3, 4, 4],
     slots: 4,
     icon: Rat,
     iconColor: "text-amber-700",
     visual: { type: "adj", main: ["STONE"], others: [["SAND"], ["SAND"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "STONE") return false;
-      let bushes = 0;
+      if (getTop(cell) !== "STONE") return false;
+      let fields = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (neighbor && checkStack(neighbor, ["SAND"])) bushes++;
+        if (getTop(neighbor) === "SAND") fields++;
       });
-      return bushes >= 2;
+      return fields >= 2;
     },
   },
 
-  // --- TIER 4: BUILDINGS (Very Hard / Highest Value) ---
-  // Strategies: Requires scarce "Brick" tokens and height 2.
+  // --- TIER 4: BUILDINGS (Very Hard) ---
 
   BAT: {
     id: "BAT",
     name: "Bat",
     desc: "Building next to Water",
-    points: [4, 4, 5], // Buffed: Building creation is risky.
+    points: [4, 4, 5],
     slots: 3,
     icon: Ghost,
     iconColor: "text-violet-400",
     visual: { type: "adj", main: ["BRICK", "BRICK"], others: [["WATER"]] },
     check: (cell, board) =>
       isBuilding(cell) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
   },
   CAT: {
     id: "CAT",
     name: "Cat",
     desc: "Building next to 2 Fields",
-    points: [5, 6], // Buffed: Requires 4 tokens + Building.
+    points: [5, 6],
     slots: 2,
     icon: Cat,
     iconColor: "text-yellow-600",
@@ -786,7 +795,7 @@ const ANIMALS = {
       let count = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (neighbor && neighbor.stack[0] === "SAND") count++;
+        if (getTop(neighbor) === "SAND") count++;
       });
       return count >= 2;
     },
@@ -795,7 +804,7 @@ const ANIMALS = {
     id: "OWL",
     name: "Owl",
     desc: "Tall Tree (2 Log+Leaf) next to Building",
-    points: [6, 7], // Max Value: Requires two 3-height structures adjacent.
+    points: [6, 7],
     slots: 2,
     icon: Eye,
     iconColor: "text-indigo-400",
@@ -812,7 +821,7 @@ const ANIMALS = {
     id: "SPIDER",
     name: "Spider",
     desc: "Dead Tree (3 Log) next to Building",
-    points: [6, 6], // Buffed: Dead trees use 3 wood, expensive.
+    points: [6, 6],
     slots: 2,
     icon: Snowflake,
     iconColor: "text-red-900",
@@ -826,14 +835,13 @@ const ANIMALS = {
       checkAnyNeighbor(board, cell.q, cell.r, (n) => isBuilding(n)),
   },
 
-  // --- TIER 5: LINEAR (Spatial Puzzle / Medium Value) ---
-  // Strategies: Lines are geometrically restrictive but often use cheaper tokens.
+  // --- TIER 5: LINEAR (Spatial Puzzle) ---
 
   CATERPILLAR: {
     id: "CATERPILLAR",
     name: "Caterpillar",
     desc: "Line: Leaf -> Leaf -> Leaf",
-    points: [3, 3, 3], // 3 tokens, simple but uses high-demand Leafs.
+    points: [3, 3, 3],
     slots: 3,
     icon: Worm,
     iconColor: "text-lime-600",
@@ -859,7 +867,7 @@ const ANIMALS = {
       if (!checkStack(cell, ["LEAF"])) return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["LEAF"]),
-        (n) => n.stack[0] === "STONE",
+        (n) => getTop(n) === "STONE",
       ]);
     },
   },
@@ -873,10 +881,10 @@ const ANIMALS = {
     iconColor: "text-amber-400",
     visual: { type: "line", sequence: [["SAND"], ["SAND"], ["STONE"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => n.stack[0] === "SAND",
-        (n) => n.stack[0] === "STONE",
+        (n) => getTop(n) === "SAND",
+        (n) => getTop(n) === "STONE",
       ]);
     },
   },
@@ -890,10 +898,10 @@ const ANIMALS = {
     iconColor: "text-stone-400",
     visual: { type: "line", sequence: [["STONE"], ["STONE"], ["SAND"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "STONE") return false;
+      if (getTop(cell) !== "STONE") return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => n.stack[0] === "STONE",
-        (n) => n.stack[0] === "SAND",
+        (n) => getTop(n) === "STONE",
+        (n) => getTop(n) === "SAND",
       ]);
     },
   },
@@ -907,9 +915,9 @@ const ANIMALS = {
     iconColor: "text-pink-400",
     visual: { type: "line", sequence: [["WATER"], ["WATER"], ["LEAF"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "WATER") return false;
+      if (getTop(cell) !== "WATER") return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => n.stack[0] === "WATER",
+        (n) => getTop(n) === "WATER",
         (n) => checkStack(n, ["LEAF"]),
       ]);
     },
@@ -918,16 +926,16 @@ const ANIMALS = {
     id: "CRANE",
     name: "Crane",
     desc: "Line: Water -> Log -> Water",
-    points: [3, 3], // 3 Tokens. Very specific "bridge" pattern.
+    points: [3, 3],
     slots: 2,
     icon: Bird,
     iconColor: "text-red-400",
     visual: { type: "line", sequence: [["WATER"], ["WOOD"], ["WATER"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "WATER") return false;
+      if (getTop(cell) !== "WATER") return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["WOOD"]),
-        (n) => n.stack[0] === "WATER",
+        (n) => getTop(n) === "WATER",
       ]);
     },
   },
@@ -941,22 +949,21 @@ const ANIMALS = {
     iconColor: "text-indigo-600",
     visual: { type: "line", sequence: [["WATER"], ["STONE"], ["WATER"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "WATER") return false;
+      if (getTop(cell) !== "WATER") return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => n.stack[0] === "STONE",
-        (n) => n.stack[0] === "WATER",
+        (n) => getTop(n) === "STONE",
+        (n) => getTop(n) === "WATER",
       ]);
     },
   },
 
-  // --- TIER 6: EXPERT LINEAR (Stacks + Lines / Highest Complexity) ---
-  // Strategies: Lines that require specific heights. Hardest to draft for.
+  // --- TIER 6: EXPERT LINEAR (Expert) ---
 
   MONKEY: {
     id: "MONKEY",
     name: "Monkey",
     desc: "Line: Small Tree -> Tall Tree",
-    points: [5, 6], // Buffed: 5 tokens total (2+3).
+    points: [5, 6],
     slots: 2,
     icon: Squirrel,
     iconColor: "text-amber-500",
@@ -978,7 +985,7 @@ const ANIMALS = {
     id: "COUGAR",
     name: "Cougar",
     desc: "Line: Medium Rock -> High Peak",
-    points: [5, 6], // Buffed: 5 tokens total (2+3).
+    points: [5, 6],
     slots: 2,
     icon: Cat,
     iconColor: "text-red-600",
@@ -1000,7 +1007,7 @@ const ANIMALS = {
     id: "KINGFISHER",
     name: "Kingfisher",
     desc: "Line: Tree -> Water -> Tree",
-    points: [5, 5], // Buffed: 5 tokens. Two trees is a big ask.
+    points: [5, 5],
     slots: 2,
     icon: Bird,
     iconColor: "text-cyan-500",
@@ -1011,7 +1018,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WOOD", "LEAF"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => n.stack[0] === "WATER",
+        (n) => getTop(n) === "WATER",
         (n) => checkStack(n, ["WOOD", "LEAF"]),
       ]);
     },
@@ -1020,19 +1027,16 @@ const ANIMALS = {
     id: "ELEPHANT",
     name: "Elephant",
     desc: "Line: Field -> Tree -> Water",
-    points: [4, 5], // 4 tokens. Fair complexity.
+    points: [4, 5],
     slots: 2,
     icon: ChessBishop,
     iconColor: "text-pink-400",
-    visual: {
-      type: "line",
-      sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]],
-    },
+    visual: { type: "line", sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]] },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["WOOD", "LEAF"]),
-        (n) => n.stack[0] === "WATER",
+        (n) => getTop(n) === "WATER",
       ]);
     },
   },
@@ -1040,7 +1044,7 @@ const ANIMALS = {
     id: "GIRAFFE",
     name: "Giraffe",
     desc: "Line: Tree -> Bush -> Building",
-    points: [5, 6], // 5 tokens + Building constraint.
+    points: [5, 6],
     slots: 2,
     icon: Footprints,
     iconColor: "text-yellow-600",
@@ -1060,7 +1064,7 @@ const ANIMALS = {
     id: "TIGER",
     name: "Tiger",
     desc: "Line: Bush -> Tall Tree -> Bush",
-    points: [5, 5], // Buffed: 5 tokens. Tall tree is a bottleneck.
+    points: [5, 5],
     slots: 2,
     icon: Cat,
     iconColor: "text-orange-500",
@@ -1080,7 +1084,7 @@ const ANIMALS = {
     id: "PEACOCK",
     name: "Peacock",
     desc: "Line: Tree -> Building -> Tree",
-    points: [6, 7], // Very Hard: 6 tokens + Building.
+    points: [6, 7],
     slots: 2,
     icon: Feather,
     iconColor: "text-purple-500",
@@ -1104,7 +1108,7 @@ const ANIMALS = {
     id: "GOAT",
     name: "Goat",
     desc: "High Peak (3 Stone) next to another Stone",
-    points: [4, 5], // 4 tokens. 3-height stack is the main cost.
+    points: [4, 5],
     slots: 2,
     icon: Crown,
     iconColor: "text-orange-400",
@@ -1115,13 +1119,13 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE", "STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => n.stack[0] === "STONE"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "STONE"),
   },
   HORSE: {
     id: "HORSE",
     name: "Horse",
     desc: "Field next to Field AND Tall Tree (2 Log+Leaf)",
-    points: [4, 5, 5], // Buffed: 5 tokens total. Requires planning.
+    points: [4, 5, 5],
     slots: 3,
     icon: ChessKnight,
     iconColor: "text-red-400",
@@ -1131,15 +1135,13 @@ const ANIMALS = {
       others: [["SAND"], ["WOOD", "WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (cell.stack[0] !== "SAND") return false;
+      if (getTop(cell) !== "SAND") return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
         (n) => board[`${n.q},${n.r}`],
       );
       return (
-        neighbors.some((n) => n?.stack[0] === "SAND") &&
-        neighbors.some(
-          (n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]),
-        )
+        neighbors.some((n) => getTop(n) === "SAND") &&
+        neighbors.some((n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]))
       );
     },
   },
@@ -2370,16 +2372,18 @@ export default function Equilibrium() {
     const players = [...gameState.players];
     const me = players[pIdx];
 
-    if (me.hasDraftedTokens) return; // Already took tokens
+    if (me.hasDraftedTokens) return;
 
     let market = [...gameState.market];
     let bag = [...gameState.bag];
+    let isLastRound = gameState.isLastRound;
+    let newLogs = []; // Temporary array for new logs
 
     me.holding = market[marketIdx].tokens;
     me.hasDraftedTokens = true;
     market.splice(marketIdx, 1);
 
-    // IMMEDIATE REFILL
+    // REFILL LOGIC
     if (bag.length >= 3) {
       const newSlot = {
         id: Math.random().toString(36).substr(2, 9),
@@ -2387,6 +2391,29 @@ export default function Equilibrium() {
       };
       market.push(newSlot);
     }
+    // --- NEW LOGIC: BAG EMPTY TRIGGER ---
+    else if (!isLastRound) {
+      // If we can't refill (bag < 3) and it wasn't already the last round:
+      isLastRound = true;
+      newLogs.push({
+        text: "The Bag is empty! Finishing the round...",
+        type: "warning",
+        id: Date.now(),
+      });
+    }
+    // ------------------------------------
+
+    // Add the draft log
+    newLogs.push({
+      text: `${me.name} drafted tokens.`,
+      type: "neutral",
+      id: Date.now() + 1, // +1 to ensure unique ID if same ms
+    });
+
+    // Merge new logs with existing
+    const updatedLogs = gameState.logs
+      ? [...gameState.logs, ...newLogs]
+      : newLogs;
 
     await updateDoc(
       doc(db, "artifacts", APP_ID, "public", "data", "rooms", roomId),
@@ -2394,11 +2421,8 @@ export default function Equilibrium() {
         players,
         market,
         bag,
-        logs: arrayUnion({
-          text: `${me.name} drafted tokens.`,
-          type: "neutral",
-          id: Date.now(),
-        }),
+        isLastRound, // Save the flag
+        logs: updatedLogs,
       },
     );
     setActivePalette(null);
@@ -2577,54 +2601,58 @@ export default function Equilibrium() {
     const players = [...gameState.players];
     const me = players[pIdx];
 
-    // Validation: Must play all tokens and must have drafted
-    if (me.holding.length > 0) return;
-    if (!me.hasDraftedTokens) return;
+    // 1. Validation
+    if (me.holding.length > 0) {
+      setFeedback({
+        type: "warning",
+        message: "Place Tokens",
+        subtext: "You must place or discard all tokens.",
+      });
+      setTimeout(() => setFeedback(null), 2000);
+      return;
+    }
+
+    // Allow ending turn if market is empty, even if we didn't draft
+    if (!me.hasDraftedTokens && gameState.market.length > 0) {
+      setFeedback({
+        type: "warning",
+        message: "Draft Tokens",
+        subtext: "You must take tokens from the market.",
+      });
+      setTimeout(() => setFeedback(null), 2000);
+      return;
+    }
 
     me.hasDraftedTokens = false;
     me.hasDraftedAnimal = false;
 
-    // --- NEW LOGIC START ---
     const updates = { players };
     const nextIndex = (gameState.turnIndex + 1) % gameState.players.length;
-    let isLastRound = gameState.isLastRound;
 
-    // 1. CRITICAL CHECK: "Sudden Death" (Market Empty)
-    // If the bag AND market are empty, the game MUST end now.
-    // The next player cannot physically take a turn.
-    if (gameState.bag.length === 0 && gameState.market.length === 0) {
+    // 2. CHECK FOR GAME OVER
+    // Condition A: Sudden Death (Market is physically empty - cannot play)
+    if (gameState.market.length === 0 && gameState.bag.length === 0) {
       updates.status = "finished";
       updates.logs = arrayUnion({
-        text: "The Market is empty! Game Over immediately.",
+        text: "Market exhausted. Game Over!",
         type: "warning",
         id: Date.now(),
       });
     }
-    // 2. STANDARD CHECK: End of Round
-    // Only happens if someone filled their board earlier (setting isLastRound)
-    // AND we have circled back to the starting player.
-    else if (isLastRound && nextIndex === gameState.startPlayerIndex) {
+    // Condition B: Last Round Flag is TRUE and we reached the Start Player
+    else if (
+      gameState.isLastRound &&
+      nextIndex === gameState.startPlayerIndex
+    ) {
       updates.status = "finished";
       updates.logs = arrayUnion({
         text: "Round complete. Game Over!",
         type: "neutral",
-        id: Date.now() + 1,
+        id: Date.now(),
       });
     }
-    // 3. WARNING CHECK: Bag Empty
-    // The bag ran out, but there are still tokens in the market.
-    // We set 'isLastRound' so players finish this circle using the remaining tokens.
+    // 3. PASS TURN
     else {
-      if (gameState.bag.length === 0 && !isLastRound) {
-        updates.isLastRound = true; // Trigger the "Final Round" flag
-        updates.logs = arrayUnion({
-          text: "The Bag is empty! Finishing the round...",
-          type: "warning",
-          id: Date.now(),
-        });
-      }
-
-      // Pass turn normally
       updates.turnIndex = nextIndex;
       updates.logs = arrayUnion({
         text: `Turn passed to ${gameState.players[nextIndex].name}.`,
@@ -2632,7 +2660,6 @@ export default function Equilibrium() {
         id: Date.now(),
       });
     }
-    // --- NEW LOGIC END ---
 
     await updateDoc(
       doc(db, "artifacts", APP_ID, "public", "data", "rooms", roomId),

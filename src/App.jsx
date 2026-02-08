@@ -1993,6 +1993,101 @@ export default function Equilibrium() {
   const [selectedAnimalIdx, setSelectedAnimalIdx] = useState(null);
   const lastLogIdRef = useRef(null);
 
+  // --- ZOOM FEATURE STATE ---
+  const [zoomCard, setZoomCard] = useState(null); // Stores the card data to show
+  const longPressTimerRef = useRef(null); // Stores the timer ID
+
+  const handleLongPressStart = (card) => {
+    // Clear any existing timer just in case
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+
+    // Start a timer: if held for 300ms, show the zoom
+    longPressTimerRef.current = setTimeout(() => {
+      setZoomCard(card);
+      // Optional: Vibrate on mobile for tactile feedback
+      //if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    // Cancel the timer if the user releases early (it was just a click)
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+
+    // Hide the card
+    setZoomCard(null);
+  };
+
+  // 5. New: Cancel zoom if the user tries to scroll the list
+  const handleScrollCancel = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+    // We don't hide the card here immediately to avoid flickering,
+    // strictly ensuring the timer never completes.
+  };
+
+  // --- ZOOM OVERLAY COMPONENT ---
+  const ZoomCardOverlay = () => {
+    if (!zoomCard) return null;
+
+    const def = ANIMALS[zoomCard.type];
+    if (!def) return null;
+
+    // Calculate progress if it's a card in hand, otherwise 0 for market
+    const slotsFilled = zoomCard.slotsFilled || 0;
+    const maxSlots = zoomCard.maxSlots || def.slots;
+    const isComplete = slotsFilled >= maxSlots;
+
+    return (
+      <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="relative w-64 h-80 bg-slate-900 border-4 rounded-3xl flex flex-col shadow-2xl overflow-hidden scale-110 md:scale-125 transition-transform border-emerald-500/50">
+          {/* Header */}
+          <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-black/40">
+            <div className="flex items-center gap-2">
+              <def.icon size={24} className={def.iconColor} />
+              <span className="text-lg font-bold text-white tracking-wide">
+                {def.name}
+              </span>
+            </div>
+            <span className="text-xl font-black text-yellow-500 drop-shadow-md">
+              +{def.points.join("/")}
+            </span>
+          </div>
+
+          {/* Visual Body */}
+          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-800 to-slate-950 p-4">
+            {/* Reusing your PatternPreview but scaled up */}
+            <div className="scale-150 origin-center mb-6">
+              <PatternPreview visual={def.visual} />
+            </div>
+            <p className="text-center text-slate-300 text-sm font-medium px-4 leading-snug">
+              {def.desc}
+            </p>
+          </div>
+
+          {/* Footer / Progress */}
+          <div className="p-4 bg-black/20 border-t border-white/5">
+            <div className="flex gap-2 justify-center">
+              {Array.from({ length: maxSlots }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 w-full rounded-full border-2 ${
+                    i < slotsFilled
+                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.6)]"
+                      : "bg-slate-800 border-slate-600"
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="text-center mt-2 text-xs text-slate-500 uppercase font-bold tracking-widest">
+              {isComplete ? "Completed" : "In Progress"}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- RESTORE SESSION ---
   useEffect(() => {
     const savedRoomId = localStorage.getItem("equilibrium_roomId");
@@ -3037,6 +3132,7 @@ export default function Equilibrium() {
       <div className="fixed inset-0 bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
         <GlobalStyles />
         <FloatingBackground />
+        <ZoomCardOverlay />
         {feedback && (
           <FeedbackOverlay
             type={feedback.type}
@@ -3367,6 +3463,15 @@ export default function Equilibrium() {
                         <button
                           key={card.id}
                           onClick={() => handleDraftAnimal(idx)}
+                          // --- ADD THESE 4 LINES ---
+                          onMouseDown={() => handleLongPressStart(card)}
+                          onMouseUp={handleLongPressEnd}
+                          onMouseLeave={handleLongPressEnd}
+                          onTouchStart={() => handleLongPressStart(card)}
+                          onTouchEnd={handleLongPressEnd}
+                          onTouchMove={handleScrollCancel} // <--- Adds scroll safety
+                          // -------------------------
+
                           disabled={!canDraft}
                           // CHANGED: Removed grayscale from the 'false' condition, set opacity-40
                           className={`relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
@@ -3687,6 +3792,14 @@ export default function Equilibrium() {
                       setSelectedHoldingIdx(null);
                       setSelectedAnimalIdx(isSelected ? null : i);
                     }}
+                    // --- ADD THESE 4 LINES ---
+                    onMouseDown={() => handleLongPressStart(card)}
+                    onMouseUp={handleLongPressEnd}
+                    onMouseLeave={handleLongPressEnd}
+                    onTouchStart={() => handleLongPressStart(card)}
+                    onTouchEnd={handleLongPressEnd}
+                    onTouchMove={handleScrollCancel} // <--- Adds scroll safety
+                    // -------------------------
                     // CHANGED: Added pointer-events-auto so the specific card is clickable
                     className={`relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 hover:-translate-y-4 text-left overflow-hidden pointer-events-auto ${
                       isSelected

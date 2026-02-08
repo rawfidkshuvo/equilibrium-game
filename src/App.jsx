@@ -1828,6 +1828,14 @@ const RulesModal = ({ onClose }) => (
           </div>
         </section>
       </div>
+      <div className="mt-8 flex flex-col items-center gap-2">
+      <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all bg-gradient-to-br from-emerald-600 to-teal-700 text-white hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
+              >
+                Understood
+              </button>
+              </div>
     </div>
   </div>
 );
@@ -3018,7 +3026,6 @@ export default function Equilibrium() {
               </div>
             </div>
             <div className="flex gap-2">
-              
               <button
                 onClick={() => setShowLeaveConfirm(true)}
                 className="p-2 hover:bg-red-900/30 rounded text-red-400"
@@ -3177,18 +3184,17 @@ export default function Equilibrium() {
                 EQUILIBRIUM
               </div>
               <div className="text-[10px] font-mono uppercase">
-  {gameState.status === "finished" ? (
-    <span className="text-red-400">GAME OVER</span>
-  ) : (
-    <>
-      <span className="text-white-400">Turn:</span>{" "}
-      <span className="text-emerald-400">
-        {gameState.players[gameState.turnIndex].name}
-      </span>
-    </>
-  )}
-</div>
-
+                {gameState.status === "finished" ? (
+                  <span className="text-red-400">GAME OVER</span>
+                ) : (
+                  <>
+                    <span className="text-white-400">Turn:</span>{" "}
+                    <span className="text-emerald-400">
+                      {gameState.players[gameState.turnIndex].name}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -3751,7 +3757,7 @@ export default function Equilibrium() {
                 <div className="flex items-center gap-2">
                   {isMyTurn ? (
                     <>
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                       YOUR TURN
                     </>
                   ) : (
@@ -3796,7 +3802,9 @@ export default function Equilibrium() {
                           onClick={() => {
                             if (isMe) {
                               if (!checkViewAndWarn()) return;
-                              setSelectedHoldingIdx(i);
+                              setSelectedHoldingIdx(
+                                selectedHoldingIdx === i ? null : i,
+                              );
                               setSelectedAnimalIdx(null);
                             }
                           }}

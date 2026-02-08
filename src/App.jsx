@@ -2944,7 +2944,7 @@ export default function Equilibrium() {
                   disabled={loading}
                   className="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl font-bold text-slate-300 transition-all active:scale-95 h-full"
                 >
-                  Penetrate
+                  Occupy
                 </button>
               </div>
             </div>
@@ -2984,8 +2984,8 @@ export default function Equilibrium() {
         <div className="z-10 w-full max-w-lg bg-slate-900/90 backdrop-blur p-8 rounded-2xl border border-emerald-500/30 shadow-2xl animate-in slide-in-from-bottom-8">
           <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
             <div>
-              <h2 className="text-lg md:text-xl text-emerald-500 font-bold uppercase">
-                New World:
+              <h2 className="text-lg md:text-xl flex items-center gap-2 text-emerald-500 font-bold uppercase">
+                <Earth size={24} /> World Coordinates:
               </h2>
 
               {/* Flex container to align ID and Button side-by-side */}
@@ -3018,12 +3018,7 @@ export default function Equilibrium() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowGuide(true)}
-                className="p-2 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
-              >
-                <BookOpen size={20} />
-              </button>
+              
               <button
                 onClick={() => setShowLeaveConfirm(true)}
                 className="p-2 hover:bg-red-900/30 rounded text-red-400"
@@ -3080,20 +3075,9 @@ export default function Equilibrium() {
                 onClick={startGame}
                 // CHECK 1: Ensure this is < 1 (Controls clickability)
                 disabled={gameState.players.length < 1}
-                className={`
-                  px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all
-                  ${
-                    // CHECK 2: Ensure this is < 1 (Controls visual style)
-                    gameState.players.length < 1
-                      ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-                      : "bg-emerald-500 text-slate-900 hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
-                  }
-                `}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all bg-gradient-to-br from-emerald-600 to-teal-700 text-white hover:bg-emerald-400 hover:scale-105 hover:shadow-emerald-500/20"
               >
-                {/* CHECK 3: Ensure this is < 1 (Controls the text you see) */}
-                {gameState.players.length < 1
-                  ? "Waiting for Architects..."
-                  : "CREATE WORLD"}
+                <Earth size={24} /> Create World
               </button>
 
               {/* Helper Message */}
@@ -3192,11 +3176,19 @@ export default function Equilibrium() {
               <div className="font-bold text-sm tracking-wider text-emerald-100">
                 EQUILIBRIUM
               </div>
-              <div className="text-[10px] text-emerald-400 font-mono uppercase">
-                {gameState.status === "finished"
-                  ? "GAME OVER"
-                  : `Turn: ${gameState.players[gameState.turnIndex].name}`}
-              </div>
+              <div className="text-[10px] font-mono uppercase">
+  {gameState.status === "finished" ? (
+    <span className="text-red-400">GAME OVER</span>
+  ) : (
+    <>
+      <span className="text-white-400">Turn:</span>{" "}
+      <span className="text-emerald-400">
+        {gameState.players[gameState.turnIndex].name}
+      </span>
+    </>
+  )}
+</div>
+
             </div>
           </div>
 
@@ -3338,8 +3330,8 @@ export default function Equilibrium() {
                   {isTurn && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
                       <div className="flex flex-col items-center animate-bounce-slight">
-                        <div className="bg-emerald-500 text-slate-900 text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] flex items-center gap-1 whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
+                        <div className="bg-emerald-500 text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] flex items-center gap-1 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                           PLAYING
                         </div>
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-emerald-500 -mt-[1px]"></div>
@@ -3363,11 +3355,11 @@ export default function Equilibrium() {
           </div>
 
           {viewingPlayer.id !== user.uid ? (
-            <div className="absolute top-20 bg-red-800/80 px-4 py-1 rounded-full text-xs font-bold text-slate-300 flex items-center gap-2 z-10 backdrop-blur animate-pulse">
+            <div className="absolute top-20 bg-red-800/80 px-4 py-1 rounded-full text-xs font-bold text-slate-300 flex items-center gap-2 z-10 backdrop-blur">
               <Eye size={12} /> {viewingPlayer.name}'s World
             </div>
           ) : (
-            <div className="absolute top-20 bg-green-800/80 px-4 py-1 rounded-full text-xs font-bold text-slate-300 flex items-center gap-2 z-10 backdrop-blur animate-pulse">
+            <div className="absolute top-20 bg-green-800/80 px-4 py-1 rounded-full text-xs font-bold text-slate-300 flex items-center gap-2 z-10 backdrop-blur">
               <Eye size={12} /> Your World
             </div>
           )}
@@ -3751,7 +3743,7 @@ export default function Equilibrium() {
         px-3 py-1.5 rounded-full w-30 font-black text-[10px] uppercase tracking-widest shadow-lg backdrop-blur-md border animate-in slide-in-from-left-8
     ${
       isMyTurn
-        ? "bg-emerald-950/90 text-emerald-300 border-emerald-400"
+        ? "bg-slate-800/90 text-emerald-300 border-emerald-400"
         : "bg-slate-800/90 text-slate-400 border-slate-600"
     }
   `}
@@ -3759,7 +3751,7 @@ export default function Equilibrium() {
                 <div className="flex items-center gap-2">
                   {isMyTurn ? (
                     <>
-                      <span className="w-2 h-2 rounded-full bg-emerald-200 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                       YOUR TURN
                     </>
                   ) : (
@@ -3848,7 +3840,7 @@ export default function Equilibrium() {
               {canEndTurn && (
                 <button
                   onClick={handleEndTurn}
-                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 w-full rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap pointer-events-auto animate-bounce"
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 w-full rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap pointer-events-auto animate-bounce [animation-duration:1.5s]"
                 >
                   End Turn
                 </button>

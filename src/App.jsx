@@ -3459,6 +3459,15 @@ export default function Equilibrium() {
                         me.animals.filter((a) => a.slotsFilled < a.maxSlots)
                           .length < 4;
 
+                      // --- NEW: MARKET MATCH DETECTION ---
+                      // Check if the player already has a valid pattern on their board for this market card
+                      const hasPossibleMatch = Object.values(me.board).some(
+                        (cell) => {
+                          return !cell.animal && def.check(cell, me.board);
+                        },
+                      );
+                      // -----------------------------------
+
                       return (
                         <button
                           key={card.id}
@@ -3473,13 +3482,23 @@ export default function Equilibrium() {
                           // -------------------------
 
                           disabled={!canDraft}
-                          // CHANGED: Removed grayscale from the 'false' condition, set opacity-40
-                          className={`relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
-                        ${
-                          canDraft
-                            ? "border-slate-600 hover:border-orange-500 hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(249,115,22,0.2)]"
-                            : "opacity-60 cursor-not-allowed border-slate-800"
-                        }`}
+                          className={`
+          relative w-24 h-32 shrink-0 bg-slate-800 border-2 rounded-xl flex flex-col shadow-xl text-left overflow-hidden transition-all duration-300 group
+          ${
+            canDraft
+              ? "hover:-translate-y-1 cursor-pointer"
+              : "cursor-not-allowed"
+          }
+          ${
+            // --- UPDATED VISUAL LOGIC ---
+            // If match: Green Pulse (Even if disabled)
+            hasPossibleMatch
+              ? "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)] animate-pulse z-10"
+              : canDraft
+                ? "border-slate-600 hover:border-orange-500 hover:shadow-[0_5px_15px_rgba(249,115,22,0.2)]"
+                : "border-slate-800 opacity-60" // Only dim if no match AND disabled
+          }
+        `}
                         >
                           {/* Card Header */}
                           <div className="flex justify-between items-center px-2 py-1 border-b border-white/5 bg-black/20 shrink-0 h-7">
@@ -3781,6 +3800,20 @@ export default function Equilibrium() {
                   i === selectedAnimalIdx && viewingPlayer.id === user.uid;
                 const isComplete = card.slotsFilled >= card.maxSlots;
 
+                // --- NEW: HAND MATCH DETECTION ---
+                // Decoupled from "isMyTurn".
+                // Shows hint if:
+                // 1. I am looking at my own hand (viewingPlayer.id === user.uid)
+                // 2. The card is not finished
+                // 3. A valid pattern exists on my board
+                const hasPossibleMatch =
+                  viewingPlayer.id === user.uid &&
+                  !isComplete &&
+                  Object.values(me.board).some((cell) => {
+                    return !cell.animal && def.check(cell, me.board);
+                  });
+                // ---------------------------------
+
                 return (
                   <button
                     key={card.id}
@@ -3801,11 +3834,25 @@ export default function Equilibrium() {
                     onTouchMove={handleScrollCancel} // <--- Adds scroll safety
                     // -------------------------
                     // CHANGED: Added pointer-events-auto so the specific card is clickable
-                    className={`relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 hover:-translate-y-4 text-left overflow-hidden pointer-events-auto ${
-                      isSelected
-                        ? "border-yellow-400 ring-2 ring-yellow-500/50 scale-105 z-10 -translate-y-2"
-                        : "border-slate-600 hover:border-slate-400"
-                    } ${isComplete ? "grayscale opacity-75" : ""}`}
+                    className={`
+          relative w-32 h-44 bg-slate-900/90 border-2 rounded-xl flex flex-col shadow-xl shrink-0 backdrop-blur-md transition-all duration-300 text-left overflow-hidden pointer-events-auto
+          ${
+            isSelected
+              ? "border-yellow-400 ring-2 ring-yellow-500/50 scale-105 z-10 -translate-y-6"
+              : "hover:-translate-y-4"
+          }
+          ${
+            // --- NEW: HIGHLIGHT LOGIC ---
+            // If match exists but not selected: Green Border + Glow + Pulse
+            // Works even if not your turn
+            hasPossibleMatch && !isSelected
+              ? "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse"
+              : !isSelected
+                ? "border-slate-600 hover:border-slate-400"
+                : ""
+          }
+          ${isComplete ? "grayscale opacity-75 border-slate-700" : ""}
+        `}
                   >
                     {/* Header */}
                     <div className="flex justify-between items-center p-2 border-b border-white/10 bg-black/20 h-10 shrink-0">

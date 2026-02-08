@@ -2461,6 +2461,32 @@ export default function Equilibrium() {
     setShowLeaveConfirm(false);
   };
 
+  // --- NEW: SHARED PALETTE STATE ---
+  const togglePalette = async (type) => {
+    // 1. Optimistic Local Update
+    const nextState = activePalette === type ? null : type;
+    setActivePalette(nextState);
+
+    // 2. Database Update (Fire & Forget)
+    if (!gameState || !user) return;
+
+    const pIdx = gameState.players.findIndex((p) => p.id === user.uid);
+    if (pIdx === -1) return;
+
+    const players = [...gameState.players];
+    // Ensure we initialize the field if it doesn't exist
+    players[pIdx].activePalette = nextState;
+
+    try {
+      await updateDoc(
+        doc(db, "artifacts", APP_ID, "public", "data", "rooms", roomId),
+        { players },
+      );
+    } catch (e) {
+      console.error("Error syncing palette state:", e);
+    }
+  };
+
   const handleDraftToken = async (marketIdx) => {
     const pIdx = gameState.players.findIndex((p) => p.id === user.uid);
     if (gameState.turnIndex !== pIdx) return;
@@ -2476,6 +2502,7 @@ export default function Equilibrium() {
 
     me.holding = market[marketIdx].tokens;
     me.hasDraftedTokens = true;
+    me.activePalette = null; // <--- Clear status in DB
     market.splice(marketIdx, 1);
 
     // REFILL LOGIC
@@ -2544,6 +2571,7 @@ export default function Equilibrium() {
 
     me.animals.push({ ...card, slotsFilled: 0, maxSlots: def.slots });
     me.hasDraftedAnimal = true;
+    me.activePalette = null; // <--- Clear status in DB
     animalMarket.splice(animalIdx, 1);
 
     // IMMEDIATE REFILL
@@ -3266,31 +3294,47 @@ export default function Equilibrium() {
           {/* OPPONENT TABS */}
           <div className="absolute top-2 md:top-4 left-0 right-0 z-10 grid grid-cols-4 gap-1 px-2 w-full max-w-2xl mx-auto pointer-events-auto">
             {gameState.players.map((p, i) => {
-              // Check if it is this player's turn
               const isTurn = gameState.turnIndex === i;
-              // --- ADD THIS CALCULATION ---
               const totalScore =
                 (p.score || 0) +
                 (p.landscapeScore || 0) -
                 (p.penalties || 0) * 2;
-              // ---------------------------
 
               return (
                 <button
                   key={p.id}
                   onClick={() => setViewingPlayerId(p.id)}
-                  // ADDED: 'relative' and 'overflow-visible' so the badge can float outside
                   className={`
-                  relative overflow-visible
-                  flex flex-col items-center justify-center h-12 md:h-14 rounded-xl border-2 transition-all w-full
-                  ${
-                    viewingPlayerId === p.id
-                      ? "bg-slate-800 border-emerald-500 shadow-lg scale-105 z-10"
-                      : "bg-slate-900/80 border-slate-700 hover:bg-slate-800/80 text-slate-400"
-                  }
-                `}
+          relative overflow-visible
+          flex flex-col items-center justify-center h-12 md:h-14 rounded-xl border-2 transition-all w-full
+          ${
+            viewingPlayerId === p.id
+              ? "bg-slate-800 border-emerald-500 shadow-lg scale-105 z-10"
+              : "bg-slate-900/80 border-slate-700 hover:bg-slate-800/80 text-slate-400"
+          }
+        `}
                 >
-                  {/* --- NEW: PLAYING BADGE --- */}
+                  {/* --- NEW: LIVE ACTIVITY INDICATORS --- */}
+                  {/* If viewing Tokens: Cyan Circle */}
+                  {p.activePalette === "TOKENS" && (
+                    <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full p-1 border border-cyan-500 shadow-lg z-20 animate-pulse">
+                      <Circle
+                        size={10}
+                        className="text-cyan-400 fill-cyan-400/20"
+                      />
+                    </div>
+                  )}
+                  {/* If viewing Animals: Orange Paw */}
+                  {p.activePalette === "ANIMALS" && (
+                    <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full p-1 border border-orange-500 shadow-lg z-20 animate-pulse">
+                      <PawPrint
+                        size={10}
+                        className="text-orange-400 fill-orange-400/20"
+                      />
+                    </div>
+                  )}
+                  {/* ----------------------------------- */}
+
                   {isTurn && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
                       <div className="flex flex-col items-center animate-bounce-slight">
@@ -3298,7 +3342,6 @@ export default function Equilibrium() {
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
                           PLAYING
                         </div>
-                        {/* Triangle Pointer */}
                         <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-emerald-500 -mt-[1px]"></div>
                       </div>
                     </div>
@@ -3396,7 +3439,7 @@ export default function Equilibrium() {
                 </div>
 
                 <button
-                  onClick={() => setActivePalette(null)}
+                  onClick={() => togglePalette(activePalette)} // <--- UPDATED (Toggles it off)
                   className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-colors border border-slate-600 font-bold text-[10px]"
                 >
                   <span>Close</span>
@@ -3699,70 +3742,125 @@ export default function Equilibrium() {
         <div className="h-64 bg-transparent absolute bottom-0 left-0 right-0 z-40 px-2 pb-2 flex justify-between items-end pointer-events-none">
           <div className="flex gap-2 items-end w-full pointer-events-none">
             {/* --- BOTTOM LEFT: CONTROLS --- */}
-            {/* CHANGED: pointer-events-auto -> pointer-events-none (Wrapper shouldn't block) */}
-            <div className="flex flex-col gap-2 mb-1 shrink-0 z-50 pointer-events-none">
-              {/* HAND (Stacked above buttons) */}
-              {isMyTurn && me.holding.length > 0 && (
-                // CHANGED: Added pointer-events-auto to the visible UI box
-                <div className="bg-emerald-900/90 border border-cyan-500/30 px-2 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md animate-in slide-in-from-left-4 pointer-events-auto">
-                  <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest">
-                    Placing
+            <div className="relative h-46 flex flex-col justify-end gap-2 mb-1 shrink-0 z-50 pointer-events-none items-start">
+              {/* 1. TURN STATUS INDICATOR (Absolute Top of h-44 container) */}
+              <div
+                className={`
+        absolute top-0 left-0
+        pointer-events-auto
+        px-3 py-1.5 rounded-full w-30 font-black text-[10px] uppercase tracking-widest shadow-lg backdrop-blur-md border animate-in slide-in-from-left-8
+    ${
+      isMyTurn
+        ? "bg-emerald-950/90 text-emerald-300 border-emerald-400"
+        : "bg-slate-800/90 text-slate-400 border-slate-600"
+    }
+  `}
+              >
+                <div className="flex items-center gap-2">
+                  {isMyTurn ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-200 animate-pulse" />
+                      YOUR TURN
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-slate-500" />
+                      AWAIT TURN
+                    </>
+                  )}
+                </div>
+              </div>
+              {/* 1. TOKEN HAND (Dynamic: Shows ME or OPPONENT based on tab) */}
+              {viewingPlayer.holding.length > 0 && (
+                <div
+                  className={`
+      w-full px-2 py-2 rounded-xl shadow-2xl flex flex-col items-center gap-2 backdrop-blur-md animate-in slide-in-from-left-4 pointer-events-auto
+      ${
+        viewingPlayer.id === user.uid
+          ? "bg-slate-900/90 border border-emerald-500 opacity-90" // Active (My Hand)
+          : "bg-slate-900/90 border border-slate-600 opacity-90" // Passive (Opponent Hand)
+      }
+    `}
+                >
+                  <span
+                    className={`text-[8px] font-bold uppercase tracking-widest ${
+                      viewingPlayer.id === user.uid
+                        ? "text-emerald-400"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {viewingPlayer.id === user.uid ? "Placing" : "Holding"}
                   </span>
+
                   <div className="flex items-center gap-1">
-                    {me.holding.map((t, i) => {
+                    {viewingPlayer.holding.map((t, i) => {
                       const T = TOKEN_TYPES[t];
+                      const isMe = viewingPlayer.id === user.uid;
+
                       return (
                         <button
                           key={i}
+                          // Click Logic: Only allow selecting if it is MY hand
                           onClick={() => {
-                            if (!checkViewAndWarn()) return;
-                            setSelectedHoldingIdx(i);
-                            setSelectedAnimalIdx(null);
+                            if (isMe) {
+                              if (!checkViewAndWarn()) return;
+                              setSelectedHoldingIdx(i);
+                              setSelectedAnimalIdx(null);
+                            }
                           }}
-                          className={`w-10 h-10 rounded-full border-2 shadow-lg flex items-center justify-center transition-all active:scale-90 ${
-                            T.color
-                          } ${T.border} ${
-                            selectedHoldingIdx === i
-                              ? "ring-4 ring-white scale-110 z-10"
-                              : "opacity-80 hover:opacity-100 hover:scale-105"
-                          }`}
+                          // Visual Logic: My hand allows interaction, Opponent hand is static
+                          className={`
+                w-10 h-10 rounded-full border-2 shadow-lg flex items-center justify-center transition-all 
+                ${T.color} ${T.border}
+                ${
+                  isMe
+                    ? "active:scale-90 cursor-pointer hover:opacity-100 hover:scale-105"
+                    : "cursor-default opacity-100"
+                }
+                ${
+                  isMe && selectedHoldingIdx === i
+                    ? "ring-4 ring-white scale-110 z-10"
+                    : "opacity-90"
+                }
+              `}
                         >
                           <T.icon size={18} className="text-white/80" />
                         </button>
                       );
                     })}
-                    {selectedHoldingIdx !== null && (
-                      <button
-                        onClick={handleDiscard}
-                        className="w-8 h-8 rounded-full border-2 border-red-500 bg-red-900/50 flex items-center justify-center hover:bg-red-800 transition-colors"
-                        title="Discard Token (-2 pts)"
-                      >
-                        <Trash2 size={12} className="text-red-300" />
-                      </button>
-                    )}
+
+                    {/* Trash Can: Only visible if looking at MY hand */}
+                    {viewingPlayer.id === user.uid &&
+                      selectedHoldingIdx !== null && (
+                        <button
+                          onClick={handleDiscard}
+                          className="w-8 h-8 rounded-full border-2 border-red-500 bg-red-900/50 flex items-center justify-center hover:bg-red-800 transition-colors"
+                          title="Discard Token (-2 pts)"
+                        >
+                          <Trash2 size={12} className="text-red-300" />
+                        </button>
+                      )}
                   </div>
                 </div>
               )}
 
-              {/* END TURN BUTTON */}
+              {/* 2. END TURN BUTTON (Always visible if condition met, regardless of view) */}
               {canEndTurn && (
                 <button
                   onClick={handleEndTurn}
-                  // CHANGED: Added pointer-events-auto
-                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg animate-bounce flex items-center justify-center gap-2 text-sm whitespace-nowrap pointer-events-auto"
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 w-full rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm whitespace-nowrap pointer-events-auto animate-bounce"
                 >
-                  End Turn <SkipForward size={16} />
+                  End Turn
                 </button>
               )}
 
-              {/* PALETTE BUTTONS */}
+              {/* 3. PALETTE BUTTONS (Always visible) */}
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     if (!checkViewAndWarn()) return;
-                    setActivePalette("TOKENS");
+                    togglePalette("TOKENS");
                   }}
-                  // CHANGED: Added pointer-events-auto
                   className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 pointer-events-auto ${
                     isMyTurn && !me.hasDraftedTokens
                       ? "bg-cyan-600 border-cyan-400 text-white animate-bounce-subtle"
@@ -3774,9 +3872,8 @@ export default function Equilibrium() {
                 <button
                   onClick={() => {
                     if (!checkViewAndWarn()) return;
-                    setActivePalette("ANIMALS");
+                    togglePalette("ANIMALS");
                   }}
-                  // CHANGED: Added pointer-events-auto
                   className={`w-14 h-14 rounded-full border-2 shadow-xl flex items-center justify-center transition-all active:scale-90 pointer-events-auto ${
                     isMyTurn &&
                     !me.hasDraftedAnimal &&

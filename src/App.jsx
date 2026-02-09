@@ -313,7 +313,7 @@ const ANIMALS = {
   SQUIRREL: {
     id: "SQUIRREL",
     name: "Squirrel",
-    desc: "Small Tree (1 Log + Leaf)",
+    desc: "Small Tree (1 Log + 1 Leaf)",
     points: [2, 2, 2],
     slots: 3,
     icon: Squirrel,
@@ -325,7 +325,7 @@ const ANIMALS = {
   LIZARD: {
     id: "LIZARD",
     name: "Lizard",
-    desc: "Small Rock (Stone) next to Bush (Leaf)",
+    desc: "Small Rock (1 Stone) next to Bush (1 Leaf)",
     points: [2, 2, 2],
     slots: 3,
     icon: Rat,
@@ -339,7 +339,7 @@ const ANIMALS = {
   SNAIL: {
     id: "SNAIL",
     name: "Snail",
-    desc: "Small Rock (Stone) next to Water",
+    desc: "Small Rock (1 Stone) next to 1 Water",
     points: [2, 2, 2],
     slots: 3,
     icon: Snail,
@@ -353,7 +353,7 @@ const ANIMALS = {
   HERON: {
     id: "HERON",
     name: "Heron",
-    desc: "Water next to Bush (Leaf)",
+    desc: "1 Water next to Bush (1 Leaf)",
     points: [2, 2, 2],
     slots: 3,
     icon: Bird,
@@ -366,7 +366,7 @@ const ANIMALS = {
   DUCK: {
     id: "DUCK",
     name: "Duck",
-    desc: "Water next to Wood (Log)",
+    desc: "1 Water next to Log (1 Wood)",
     points: [2, 2, 2],
     slots: 3,
     icon: Origami,
@@ -379,7 +379,7 @@ const ANIMALS = {
   HAWK: {
     id: "HAWK",
     name: "Hawk",
-    desc: "Dead Tree (3 Logs)",
+    desc: "Dead Tree (3 Woods)",
     points: [3, 4],
     slots: 2,
     icon: Bird,
@@ -390,7 +390,7 @@ const ANIMALS = {
   EAGLE: {
     id: "EAGLE",
     name: "Eagle",
-    desc: "Highest Peak (3 Stone)",
+    desc: "Highest Peak (3 Stones)",
     points: [3, 4],
     slots: 2,
     icon: Target,
@@ -404,7 +404,7 @@ const ANIMALS = {
   FROG: {
     id: "FROG",
     name: "Frog",
-    desc: "Bush (Leaf) next to Water",
+    desc: "Bush (1 Leaf) next to 1 Water",
     points: [2, 2, 2, 3],
     slots: 4,
     icon: Clover,
@@ -417,7 +417,7 @@ const ANIMALS = {
   BEAVER: {
     id: "BEAVER",
     name: "Beaver",
-    desc: "Log next to Water AND Tree",
+    desc: "1 Wood next to 1 Water AND Small Tree",
     points: [4, 5],
     slots: 2,
     icon: Rat,
@@ -442,7 +442,7 @@ const ANIMALS = {
   TURTLE: {
     id: "TURTLE",
     name: "Turtle",
-    desc: "Water next to Field AND Stone",
+    desc: "1 Water next to 1 Sand AND 1 Stone",
     points: [3, 3],
     slots: 2,
     icon: Turtle,
@@ -463,7 +463,7 @@ const ANIMALS = {
   HEDGEHOG: {
     id: "HEDGEHOG",
     name: "Hedgehog",
-    desc: "Field next to Wood(1 Log) AND Bush(1 Leaf)",
+    desc: "1 Sand next to Log(1 Wood) AND Bush(1 Leaf)",
     points: [3, 4],
     slots: 2,
     icon: Rabbit,
@@ -483,7 +483,7 @@ const ANIMALS = {
   SHELL: {
     id: "SHELL",
     name: "Shell",
-    desc: "Sand next to Water AND Stone",
+    desc: "1 Sand next to 1 Water AND 1 Stone",
     points: [3, 3],
     slots: 2,
     icon: Shell,
@@ -503,7 +503,7 @@ const ANIMALS = {
   BOAR: {
     id: "BOAR",
     name: "Boar",
-    desc: "Field next to Water AND Tree",
+    desc: "1 Sand next to 1 Water AND 1 Tree",
     points: [4, 4, 5],
     slots: 3,
     icon: PiggyBank,
@@ -527,7 +527,7 @@ const ANIMALS = {
   ANTS: {
     id: "ANTS",
     name: "Ants",
-    desc: "Field next to Bush(1 Leaf) AND Tree",
+    desc: "1 Sand next to Bush(1 Leaf) AND Small Tree",
     points: [4, 4, 5],
     slots: 3,
     icon: Bug,
@@ -551,7 +551,7 @@ const ANIMALS = {
   FOX: {
     id: "FOX",
     name: "Fox",
-    desc: "Medium Rock (2 Stone) next to Medium Wood (2 Log)",
+    desc: "Medium Rock (2 Stones) next to Medium Log (2 Woods)",
     points: [4, 5],
     slots: 2,
     icon: Cat,
@@ -570,7 +570,7 @@ const ANIMALS = {
   DEER: {
     id: "DEER",
     name: "Deer",
-    desc: "Tall Tree (2 Log+Leaf) next to Field",
+    desc: "Tall Tree next to 1 Sand",
     points: [4, 5, 5],
     slots: 3,
     icon: Dog,
@@ -587,7 +587,7 @@ const ANIMALS = {
   BEAR: {
     id: "BEAR",
     name: "Bear",
-    desc: "Tall Tree (2 Log+Leaf) next to Mountain (2+ Stone)",
+    desc: "Tall Tree next to Medium Rock (2 Stones)",
     points: [5, 6],
     slots: 2,
     icon: Panda,
@@ -604,13 +604,13 @@ const ANIMALS = {
         board,
         cell.q,
         cell.r,
-        (n) => n && n.stack.length >= 2 && getTop(n) === "STONE",
+        (n) => checkStack(n, ["STONE", "STONE"]),
       ),
   },
   PANDA: {
     id: "PANDA",
     name: "Panda",
-    desc: "Tall Tree (2 Log+Leaf) next to Water",
+    desc: "Tall Tree next to 1 Water",
     points: [5, 5],
     slots: 2,
     icon: Panda,
@@ -627,7 +627,7 @@ const ANIMALS = {
   SCORPION: {
     id: "SCORPION",
     name: "Scorpion",
-    desc: "Medium Rock (2 Stone) next to Field",
+    desc: "Medium Rock (2 Stones) next to 1 Sand",
     points: [3, 3, 3],
     slots: 3,
     icon: Snail,
@@ -643,7 +643,7 @@ const ANIMALS = {
   BEE: {
     id: "BEE",
     name: "Bee",
-    desc: "Bush (Leaf) next to 2 other Bushes",
+    desc: "Bush (1 Leaf) next to 2 other Bushes",
     points: [2, 3, 3],
     slots: 3,
     icon: Flower,
@@ -662,7 +662,7 @@ const ANIMALS = {
   WOLF: {
     id: "WOLF",
     name: "Wolf",
-    desc: "Tree (1 Log+Leaf) next to 2 other Trees",
+    desc: "Small Tree next to 2 other Small Trees",
     points: [6, 7],
     slots: 2,
     icon: Moon,
@@ -688,7 +688,7 @@ const ANIMALS = {
   SALMON: {
     id: "SALMON",
     name: "Salmon",
-    desc: "Water next to 2 other Water tiles",
+    desc: "1 Water next to 2 other Water",
     points: [3, 3, 3],
     slots: 3,
     icon: Fish,
@@ -706,7 +706,7 @@ const ANIMALS = {
   RABBIT: {
     id: "RABBIT",
     name: "Rabbit",
-    desc: "Field next to 2 Bushes",
+    desc: "1 Sand next to 2 Bushes",
     points: [3, 4, 4, 4],
     slots: 4,
     icon: Rabbit,
@@ -725,7 +725,7 @@ const ANIMALS = {
   PENGUIN: {
     id: "PENGUIN",
     name: "Penguin",
-    desc: "Stone next to 2 Water tiles",
+    desc: "1 Stone next to 2 Waters",
     points: [3, 3, 4, 4],
     slots: 4,
     icon: Bird,
@@ -745,7 +745,7 @@ const ANIMALS = {
   MOLE: {
     id: "MOLE",
     name: "Mole",
-    desc: "Stone next to 2 Fields",
+    desc: "1 Stone next to 2 Sands",
     points: [3, 3, 4, 4],
     slots: 4,
     icon: Rat,
@@ -767,7 +767,7 @@ const ANIMALS = {
   BAT: {
     id: "BAT",
     name: "Bat",
-    desc: "Building next to Water",
+    desc: "Building next to 1 Water",
     points: [4, 4, 5],
     slots: 3,
     icon: Ghost,
@@ -780,7 +780,7 @@ const ANIMALS = {
   CAT: {
     id: "CAT",
     name: "Cat",
-    desc: "Building next to 2 Fields",
+    desc: "Building next to 2 Sands",
     points: [5, 6],
     slots: 2,
     icon: Cat,
@@ -803,7 +803,7 @@ const ANIMALS = {
   OWL: {
     id: "OWL",
     name: "Owl",
-    desc: "Tall Tree (2 Log+Leaf) next to Building",
+    desc: "Tall Tree next to Building",
     points: [6, 7],
     slots: 2,
     icon: Eye,
@@ -820,7 +820,7 @@ const ANIMALS = {
   SPIDER: {
     id: "SPIDER",
     name: "Spider",
-    desc: "Dead Tree (3 Log) next to Building",
+    desc: "Dead Tree (3 Woods) next to Building",
     points: [6, 6],
     slots: 2,
     icon: Snowflake,
@@ -925,7 +925,7 @@ const ANIMALS = {
   CRANE: {
     id: "CRANE",
     name: "Crane",
-    desc: "Line: Water -> Log -> Water",
+    desc: "Line: Water -> Wood -> Water",
     points: [3, 3],
     slots: 2,
     icon: Bird,
@@ -984,7 +984,7 @@ const ANIMALS = {
   COUGAR: {
     id: "COUGAR",
     name: "Cougar",
-    desc: "Line: Medium Rock -> High Peak",
+    desc: "Line: Medium Rock -> Highest Peak",
     points: [5, 6],
     slots: 2,
     icon: Cat,
@@ -1026,7 +1026,7 @@ const ANIMALS = {
   ELEPHANT: {
     id: "ELEPHANT",
     name: "Elephant",
-    desc: "Line: Field -> Tree -> Water",
+    desc: "Line: Sand -> Small Tree -> Water",
     points: [4, 5],
     slots: 2,
     icon: ChessBishop,
@@ -1043,7 +1043,7 @@ const ANIMALS = {
   GIRAFFE: {
     id: "GIRAFFE",
     name: "Giraffe",
-    desc: "Line: Tree -> Bush -> Building",
+    desc: "Line: Small Tree -> Bush -> Building",
     points: [5, 6],
     slots: 2,
     icon: Footprints,
@@ -1083,7 +1083,7 @@ const ANIMALS = {
   PEACOCK: {
     id: "PEACOCK",
     name: "Peacock",
-    desc: "Line: Tree -> Building -> Tree",
+    desc: "Line: Small Tree -> Building ->Small Tree",
     points: [6, 7],
     slots: 2,
     icon: Feather,
@@ -1107,7 +1107,7 @@ const ANIMALS = {
   GOAT: {
     id: "GOAT",
     name: "Goat",
-    desc: "High Peak (3 Stone) next to another Stone",
+    desc: "Highest Peak (3 Stones) next to another Stone",
     points: [4, 5],
     slots: 2,
     icon: Crown,
@@ -1124,7 +1124,7 @@ const ANIMALS = {
   HORSE: {
     id: "HORSE",
     name: "Horse",
-    desc: "Field next to Field AND Tall Tree (2 Log+Leaf)",
+    desc: "1 Sand next to 1 Sand AND Tall Tree",
     points: [4, 5, 5],
     slots: 3,
     icon: ChessKnight,
@@ -1727,12 +1727,12 @@ const RulesModal = ({ onClose }) => (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
               <strong className="text-emerald-400 block mb-1">
-                Trees (Wood + Foliage)
+                Trees (Wood + Leaf)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
-                <li>1 Leaf alone (Bush): 1 Pt</li>
-                <li>2 High (1 Log + 1 Leaf): 3 Pts</li>
-                <li>3 High (2 Log + 2 Leaf): 7 Pts</li>
+                <li>Bush (1 Leaf): 1 Pt</li>
+                <li>Small Tree (1 Wood + 1 Leaf): 3 Pts</li>
+                <li>Tall Tree (2 Wood + 1 Leaf): 7 Pts</li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
@@ -1740,10 +1740,11 @@ const RulesModal = ({ onClose }) => (
                 Mountains (Stone)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
-                <li>Score = Height of stack (1=1pt, 2=3pts, 3=7pts).</li>
                 <li>
                   Only scores if adjacent to at least one other Mountain stack.
+                  The more the better.
                 </li>
+                <li>Height of Mountain (1=1pt, 2=3pts, 3=7pts)</li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
@@ -1751,8 +1752,11 @@ const RulesModal = ({ onClose }) => (
                 Fields (Sand)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
-                <li>5 Pts for every distinct group of 2+ connected Sand.</li>
-                <li>Cannot stack tokens on Sand.</li>
+                <li>5 Pts for every distinct group of 2+ connected Sands.</li>
+                <li>
+                  No matter how long the chain is, only disjointed groups score
+                  points.
+                </li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl border border-emerald-900/30">
@@ -1760,8 +1764,11 @@ const RulesModal = ({ onClose }) => (
                 Rivers (Water)
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
-                <li>Chain scoring:</li>
-                <li>2=2pts, 3=5pts, 4=8pts, 5=11pts, 6+ = +4pts for each.</li>
+                <li>Make chain to score big. The longer the better.</li>
+                <li>
+                  Length of River chain (2=2pts, 3=5pts, 4=8pts, 5=11pts, 6+ =
+                  +4pts for each)
+                </li>
               </ul>
             </div>
             <div className="bg-slate-800 p-4 rounded-xl md:col-span-2 border border-emerald-900/30">
@@ -1770,8 +1777,13 @@ const RulesModal = ({ onClose }) => (
               </strong>
               <ul className="list-disc pl-4 text-xs space-y-1">
                 <li>
-                  5 Pts if surrounded by 3+ distinct terrain types (colors).
+                  5 Pts for each Building if surrounded by 3+ distinct token
+                  types (Except Brick).
                 </li>
+                <li>Wooden House (1 Wood + 1 Brick)</li>
+                <li>Stoned House(1 Stone + 1 Brick)</li>
+                <li>Brick House(1 Brick + 1 Brick)</li>
+                <li>All of them are considered as Building.</li>
               </ul>
             </div>
           </div>

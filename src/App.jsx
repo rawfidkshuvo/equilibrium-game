@@ -300,6 +300,7 @@ const checkLine = (board, q, r, predicates) => {
   });
 };
 
+
 const ANIMALS = {
   // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy) ---
 
@@ -420,11 +421,11 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WOOD"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       const hasWater = neighbors.some((n) => checkStack(n, ["WATER"]));
       const hasTree = neighbors.some(
-        (n) => n && checkStack(n, ["WOOD", "LEAF"]),
+        (n) => n && checkStack(n, ["WOOD", "LEAF"])
       );
       return hasWater && hasTree;
     },
@@ -441,7 +442,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WATER"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => checkStack(n, ["SAND"])) &&
@@ -461,7 +462,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -481,7 +482,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => checkStack(n, ["WATER"])) &&
@@ -505,7 +506,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => checkStack(n, ["WATER"])) &&
@@ -529,7 +530,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -553,7 +554,7 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) =>
-        checkStack(n, ["WOOD", "WOOD"]),
+        checkStack(n, ["WOOD", "WOOD"])
       ),
   },
   DEER: {
@@ -589,7 +590,7 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) =>
-        checkStack(n, ["STONE", "STONE"]),
+        checkStack(n, ["STONE", "STONE"])
       ),
   },
   PANDA: {
@@ -1124,7 +1125,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => checkStack(n, ["SAND"])) &&
@@ -3137,7 +3138,7 @@ export default function Equilibrium() {
       isMyTurn && me.hasDraftedTokens && me.holding.length === 0;
 
     return (
-      <div className="fixed inset-0 z-[160] bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
+      <div className="fixed inset-0 bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
         <GlobalStyles />
         <FloatingBackground />
         <ZoomCardOverlay />
@@ -3572,158 +3573,154 @@ export default function Equilibrium() {
           )}
 
           {gameState.status === "finished" && (
-            // 1. OUTER CONTAINER: Changed 'py-24' to 'py-12' (approx 3rem/48px).
-            // This preserves the "gap" from the top bar but gives the modal much more room to grow.
-            <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center backdrop-blur-sm px-4 py-12">
-              {/* 2. MODAL: max-h-full respects the py-12 padding. flex-col handles the layout. */}
-              <div className="bg-slate-900 w-full max-w-lg max-h-full flex flex-col rounded-2xl border-2 border-yellow-500 text-center shadow-2xl animate-in zoom-in overflow-hidden">
-                {/* 3. HEADER: Added responsive padding (smaller on mobile) */}
-                <div className="shrink-0 p-4 md:p-6 pb-2">
-                  <div className="flex justify-center">
-                    {/* TROPHY: Responsive size (48px on mobile, 64px on desktop) to save vertical space */}
-                    <Trophy className="text-yellow-400 mb-2 md:mb-4 animate-bounce w-12 h-12 md:w-16 md:h-16" />
-                  </div>
+            <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm">
+              <div className="bg-slate-900 p-8 rounded-2xl border-2 border-yellow-500 text-center shadow-2xl animate-in zoom-in max-w-lg w-full m-4">
+                <Trophy
+                  size={64}
+                  className="text-yellow-400 mx-auto mb-4 animate-bounce"
+                />
 
-                  {/* --- WINNER CALCULATION & HEADER --- */}
-                  {(() => {
-                    const getAnimalsPlaced = (p) =>
-                      p.animals.reduce(
-                        (sum, card) => sum + card.slotsFilled,
-                        0,
-                      );
+                {/* --- WINNER CALCULATION & HEADER --- */}
+                {(() => {
+                  // 1. Helper to count total animals placed (Tie-breaker)
+                  const getAnimalsPlaced = (p) =>
+                    p.animals.reduce((sum, card) => sum + card.slotsFilled, 0);
 
-                    const getNetScore = (p) =>
-                      (p.score || 0) +
-                      (p.landscapeScore || 0) -
-                      (p.penalties || 0) * 2;
+                  // 2. Helper to get Net Score
+                  const getNetScore = (p) =>
+                    (p.score || 0) +
+                    (p.landscapeScore || 0) -
+                    (p.penalties || 0) * 2;
 
-                    const sortedPlayers = [...gameState.players].sort(
-                      (a, b) => {
-                        const scoreA = getNetScore(a);
-                        const scoreB = getNetScore(b);
-                        if (scoreB !== scoreA) return scoreB - scoreA;
-                        const animalsA = getAnimalsPlaced(a);
-                        const animalsB = getAnimalsPlaced(b);
-                        return animalsB - animalsA;
-                      },
-                    );
+                  // 3. Sort Players
+                  const sortedPlayers = [...gameState.players].sort((a, b) => {
+                    const scoreA = getNetScore(a);
+                    const scoreB = getNetScore(b);
 
-                    const topPlayer = sortedPlayers[0];
-                    const topScore = getNetScore(topPlayer);
-                    const topAnimals = getAnimalsPlaced(topPlayer);
+                    // Primary Sort: Score
+                    if (scoreB !== scoreA) return scoreB - scoreA;
 
-                    const winners = sortedPlayers.filter(
-                      (p) =>
-                        getNetScore(p) === topScore &&
-                        getAnimalsPlaced(p) === topAnimals,
-                    );
+                    // Secondary Sort: Most Animals Placed
+                    const animalsA = getAnimalsPlaced(a);
+                    const animalsB = getAnimalsPlaced(b);
+                    return animalsB - animalsA;
+                  });
 
-                    return (
-                      <>
-                        <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 uppercase mb-1 md:mb-2">
-                          {winners.map((w) => w.name).join(" & ")}
-                        </h2>
-                        <p className="text-emerald-400 font-bold tracking-widest text-xs md:text-sm uppercase mb-4">
-                          Rescued the World!
-                        </p>
+                  // 4. Identify Winners (Handle Ties)
+                  const topPlayer = sortedPlayers[0];
+                  const topScore = getNetScore(topPlayer);
+                  const topAnimals = getAnimalsPlaced(topPlayer);
 
-                        {/* 4. SCROLLABLE LIST: flex-1 ensures this area shrinks/grows to fit remaining space */}
-                        <div className="space-y-2 md:space-y-3 overflow-y-auto custom-scrollbar text-sm flex-1 min-h-0 px-2 pb-2">
-                          {sortedPlayers.map((p, i) => {
-                            const penaltyPoints = (p.penalties || 0) * 2;
-                            const totalScore = getNetScore(p);
-                            const isWinner = winners.some((w) => w.id === p.id);
-                            const animalsPlacedCount = getAnimalsPlaced(p);
+                  const winners = sortedPlayers.filter(
+                    (p) =>
+                      getNetScore(p) === topScore &&
+                      getAnimalsPlaced(p) === topAnimals,
+                  );
 
-                            return (
-                              <div
-                                key={p.id}
-                                className={`p-3 rounded-xl border flex flex-col gap-2 relative overflow-hidden transition-all text-left mx-1
+                  return (
+                    <>
+                      <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 uppercase mb-2">
+                        {winners.map((w) => w.name).join(" & ")}
+                      </h2>
+                      <p className="text-emerald-400 font-bold tracking-widest text-sm uppercase mb-6">
+                        Rescued the World!
+                      </p>
+
+                      <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar text-sm">
+                        {sortedPlayers.map((p, i) => {
+                          const penaltyPoints = (p.penalties || 0) * 2;
+                          const totalScore = getNetScore(p);
+                          const isWinner = winners.some((w) => w.id === p.id);
+                          const animalsPlacedCount = getAnimalsPlaced(p);
+
+                          return (
+                            <div
+                              key={p.id}
+                              className={`p-3 rounded-xl border flex flex-col gap-2 relative overflow-hidden transition-all
                                 ${
                                   isWinner
                                     ? "bg-slate-800 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
                                     : "bg-slate-800 border-slate-700 opacity-80"
                                 }`}
-                              >
-                                {isWinner && (
-                                  <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none" />
-                                )}
+                            >
+                              {/* Winner Glow Effect */}
+                              {isWinner && (
+                                <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none" />
+                              )}
 
-                                <div className="flex justify-between items-center border-b border-slate-700 pb-2 relative z-10">
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className={`font-mono font-bold ${isWinner ? "text-yellow-500" : "text-slate-500"}`}
-                                    >
-                                      #{i + 1}
-                                    </span>
-                                    <span className="font-bold text-white text-lg flex items-center gap-2">
-                                      {p.name}
-                                      {isWinner && (
-                                        <Crown
-                                          size={18}
-                                          className="text-yellow-400 fill-yellow-400/20"
-                                        />
-                                      )}
-                                    </span>
-                                  </div>
+                              <div className="flex justify-between items-center border-b border-slate-700 pb-2 relative z-10">
+                                <div className="flex items-center gap-2">
                                   <span
-                                    className={`text-2xl font-black ${isWinner ? "text-yellow-400 scale-110" : "text-slate-400"}`}
+                                    className={`font-mono font-bold ${isWinner ? "text-yellow-500" : "text-slate-500"}`}
                                   >
-                                    {totalScore}
+                                    #{i + 1}
+                                  </span>
+                                  <span className="font-bold text-white text-lg flex items-center gap-2">
+                                    {p.name}
+                                    {/* --- CROWN ICON --- */}
+                                    {isWinner && (
+                                      <Crown
+                                        size={18}
+                                        className="text-yellow-400 fill-yellow-400/20"
+                                      />
+                                    )}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`text-2xl font-black ${isWinner ? "text-yellow-400 scale-110" : "text-slate-400"}`}
+                                >
+                                  {totalScore}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400 relative z-10">
+                                <div className="flex justify-between">
+                                  <span>Animals Placed:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {animalsPlacedCount}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Animal Pts:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {p.score}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Landscape Pts:</span>{" "}
+                                  <span className="text-white font-bold">
+                                    {p.landscapeScore}
                                   </span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-400 relative z-10">
-                                  <div className="flex justify-between">
-                                    <span>Animals Placed:</span>{" "}
-                                    <span className="text-white font-bold">
-                                      {animalsPlacedCount}
-                                    </span>
+                                {/* Penalty Row */}
+                                {penaltyPoints > 0 ? (
+                                  <div className="flex justify-between text-red-400 font-bold">
+                                    <span>Penalties:</span>{" "}
+                                    <span>-{penaltyPoints}</span>
                                   </div>
-                                  <div className="flex justify-between">
-                                    <span>Animal Pts:</span>{" "}
-                                    <span className="text-white font-bold">
-                                      {p.score}
-                                    </span>
+                                ) : (
+                                  <div className="flex justify-between text-emerald-600/50">
+                                    <span>Penalties:</span> <span>0</span>
                                   </div>
-                                  <div className="flex justify-between">
-                                    <span>Landscape Pts:</span>{" "}
-                                    <span className="text-white font-bold">
-                                      {p.landscapeScore}
-                                    </span>
-                                  </div>
-
-                                  {penaltyPoints > 0 ? (
-                                    <div className="flex justify-between text-red-400 font-bold">
-                                      <span>Penalties:</span>{" "}
-                                      <span>-{penaltyPoints}</span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex justify-between text-emerald-600/50">
-                                      <span>Penalties:</span> <span>0</span>
-                                    </div>
-                                  )}
-                                </div>
+                                )}
                               </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
 
-                {/* 5. FOOTER: shrink-0 keeps it at bottom. */}
-                <div className="shrink-0 p-4 md:p-6 pt-0">
-                  {gameState.hostId === user.uid && (
-                    <button
-                      onClick={returnToLobby}
-                      className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full text-white transition-colors shadow-lg"
-                    >
-                      Return to Lobby
-                    </button>
-                  )}
-                </div>
+                {gameState.hostId === user.uid && (
+                  <button
+                    onClick={returnToLobby}
+                    className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full text-white transition-colors"
+                  >
+                    Return to Lobby
+                  </button>
+                )}
               </div>
             </div>
           )}

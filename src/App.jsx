@@ -76,7 +76,6 @@ import {
   Cuboid,
   Grip,
   Droplet,
-  Sprout,
   Squirrel,
   Turtle,
   PiggyBank,
@@ -86,6 +85,7 @@ import {
   Cone,
   Panda,
   Origami,
+  ChartNoAxesGantt,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -227,7 +227,7 @@ const TOKEN_TYPES = {
     id: "SAND",
     color: "bg-yellow-400",
     border: "border-yellow-600",
-    icon: Sprout,
+    icon: ChartNoAxesGantt,
     name: "Sand",
     validOn: ["EMPTY"],
     scoreType: "FIELD",
@@ -313,7 +313,7 @@ const ANIMALS = {
   SQUIRREL: {
     id: "SQUIRREL",
     name: "Squirrel",
-    desc: "Small Tree (1 Log + 1 Leaf)",
+    desc: "Small Tree (1 Wood + 1 Leaf)",
     points: [2, 2, 2],
     slots: 3,
     icon: Squirrel,
@@ -325,7 +325,7 @@ const ANIMALS = {
   LIZARD: {
     id: "LIZARD",
     name: "Lizard",
-    desc: "Small Rock (1 Stone) next to Bush (1 Leaf)",
+    desc: "1 Stone next to Bush (1 Leaf)",
     points: [2, 2, 2],
     slots: 3,
     icon: Rat,
@@ -339,7 +339,7 @@ const ANIMALS = {
   SNAIL: {
     id: "SNAIL",
     name: "Snail",
-    desc: "Small Rock (1 Stone) next to 1 Water",
+    desc: "1 Stone next to 1 Water",
     points: [2, 2, 2],
     slots: 3,
     icon: Snail,
@@ -366,7 +366,7 @@ const ANIMALS = {
   DUCK: {
     id: "DUCK",
     name: "Duck",
-    desc: "1 Water next to Log (1 Wood)",
+    desc: "1 Water next to 1 Wood",
     points: [2, 2, 2],
     slots: 3,
     icon: Origami,
@@ -463,7 +463,7 @@ const ANIMALS = {
   HEDGEHOG: {
     id: "HEDGEHOG",
     name: "Hedgehog",
-    desc: "1 Sand next to Log(1 Wood) AND Bush(1 Leaf)",
+    desc: "1 Sand next to 1 Wood AND Bush(1 Leaf)",
     points: [3, 4],
     slots: 2,
     icon: Rabbit,
@@ -503,7 +503,7 @@ const ANIMALS = {
   BOAR: {
     id: "BOAR",
     name: "Boar",
-    desc: "1 Sand next to 1 Water AND 1 Tree",
+    desc: "1 Sand next to 1 Water AND Small Tree",
     points: [4, 4, 5],
     slots: 3,
     icon: PiggyBank,
@@ -1006,7 +1006,7 @@ const ANIMALS = {
   KINGFISHER: {
     id: "KINGFISHER",
     name: "Kingfisher",
-    desc: "Line: Tree -> Water -> Tree",
+    desc: "Line: Small Tree -> Water -> Small Tree",
     points: [5, 5],
     slots: 2,
     icon: Bird,

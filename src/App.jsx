@@ -3137,7 +3137,7 @@ export default function Equilibrium() {
       isMyTurn && me.hasDraftedTokens && me.holding.length === 0;
 
     return (
-      <div className="fixed inset-0 bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
+      <div className="fixed inset-0 z-[160] bg-slate-950 text-white flex flex-col overflow-hidden font-sans select-none">
         <GlobalStyles />
         <FloatingBackground />
         <ZoomCardOverlay />

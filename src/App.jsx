@@ -300,7 +300,6 @@ const checkLine = (board, q, r, predicates) => {
   });
 };
 
-
 const ANIMALS = {
   // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy) ---
 
@@ -421,11 +420,11 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WOOD"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       const hasWater = neighbors.some((n) => checkStack(n, ["WATER"]));
       const hasTree = neighbors.some(
-        (n) => n && checkStack(n, ["WOOD", "LEAF"])
+        (n) => n && checkStack(n, ["WOOD", "LEAF"]),
       );
       return hasWater && hasTree;
     },
@@ -442,7 +441,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WATER"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => checkStack(n, ["SAND"])) &&
@@ -462,7 +461,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -482,7 +481,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => checkStack(n, ["WATER"])) &&
@@ -506,7 +505,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => checkStack(n, ["WATER"])) &&
@@ -530,7 +529,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -554,7 +553,7 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) =>
-        checkStack(n, ["WOOD", "WOOD"])
+        checkStack(n, ["WOOD", "WOOD"]),
       ),
   },
   DEER: {
@@ -590,7 +589,7 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) =>
-        checkStack(n, ["STONE", "STONE"])
+        checkStack(n, ["STONE", "STONE"]),
       ),
   },
   PANDA: {
@@ -1125,7 +1124,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`]
+        (n) => board[`${n.q},${n.r}`],
       );
       return (
         neighbors.some((n) => checkStack(n, ["SAND"])) &&
@@ -3574,7 +3573,7 @@ export default function Equilibrium() {
 
           {gameState.status === "finished" && (
             <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm">
-              <div className="bg-slate-900 p-8 rounded-2xl border-2 border-yellow-500 text-center shadow-2xl animate-in zoom-in max-w-lg w-full m-4">
+              <div className="bg-slate-900 p-6 rounded-2xl border-2 border-yellow-500 text-center shadow-2xl animate-in zoom-in max-w-lg w-full m-4 max-h-[90vh] flex flex-col">
                 <Trophy
                   size={64}
                   className="text-yellow-400 mx-auto mb-4 animate-bounce"
@@ -3626,7 +3625,7 @@ export default function Equilibrium() {
                         Rescued the World!
                       </p>
 
-                      <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto custom-scrollbar text-sm">
+                      <div className="space-y-3 mb-6 overflow-y-auto custom-scrollbar text-sm flex-1 min-h-0 pr-2">
                         {sortedPlayers.map((p, i) => {
                           const penaltyPoints = (p.penalties || 0) * 2;
                           const totalScore = getNetScore(p);
@@ -3714,12 +3713,14 @@ export default function Equilibrium() {
                 })()}
 
                 {gameState.hostId === user.uid && (
-                  <button
-                    onClick={returnToLobby}
-                    className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full text-white transition-colors"
-                  >
-                    Return to Lobby
-                  </button>
+                  <div className="shrink-0 mt-auto">
+                    <button
+                      onClick={returnToLobby}
+                      className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold w-full text-white transition-colors"
+                    >
+                      Return to Lobby
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

@@ -3166,7 +3166,7 @@ export default function Equilibrium() {
           />
         )}
 
-        <div className="h-14 md:h-16 bg-slate-900 border-b border-emerald-900/30 flex items-center justify-between px-2 z-50 shrink-0 shadow-lg">
+        <div className="h-14 md:h-16 bg-slate-900 border-b border-emerald-900/30 flex items-center justify-between px-2 z-[160] shrink-0 shadow-lg">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-emerald-900/50 rounded-lg flex items-center justify-center border border-emerald-700">
               <Hexagon className="text-emerald-400" size={20} />

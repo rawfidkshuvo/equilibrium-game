@@ -300,12 +300,6 @@ const checkLine = (board, q, r, predicates) => {
   });
 };
 
-// HELPER: Gets the visible token type (Top of stack)
-// Returns null if empty.
-const getTop = (cell) => {
-  if (!cell || cell.stack.length === 0) return null;
-  return cell.stack[cell.stack.length - 1];
-};
 
 const ANIMALS = {
   // --- TIER 1: SIMPLE STACKS & ADJACENCY (Easy) ---
@@ -319,7 +313,6 @@ const ANIMALS = {
     icon: Squirrel,
     iconColor: "text-orange-500",
     visual: { type: "stack", tokens: ["WOOD", "LEAF"] },
-    // Full Proof: Exact stack match required.
     check: (cell) => checkStack(cell, ["WOOD", "LEAF"]),
   },
   LIZARD: {
@@ -331,7 +324,6 @@ const ANIMALS = {
     icon: Rat,
     iconColor: "text-emerald-400",
     visual: { type: "adj", main: ["STONE"], others: [["LEAF"]] },
-    // Full Proof: Exact stack matches required.
     check: (cell, board) =>
       checkStack(cell, ["STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["LEAF"])),
@@ -345,10 +337,9 @@ const ANIMALS = {
     icon: Snail,
     iconColor: "text-lime-300",
     visual: { type: "adj", main: ["STONE"], others: [["WATER"]] },
-    // Full Proof: Exact Stone stack, neighbor must have Water on TOP.
     check: (cell, board) =>
       checkStack(cell, ["STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WATER"])),
   },
   HERON: {
     id: "HERON",
@@ -360,7 +351,7 @@ const ANIMALS = {
     iconColor: "text-cyan-300",
     visual: { type: "adj", main: ["WATER"], others: [["LEAF"]] },
     check: (cell, board) =>
-      getTop(cell) === "WATER" &&
+      checkStack(cell, ["WATER"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["LEAF"])),
   },
   DUCK: {
@@ -373,7 +364,7 @@ const ANIMALS = {
     iconColor: "text-green-600",
     visual: { type: "adj", main: ["WATER"], others: [["WOOD"]] },
     check: (cell, board) =>
-      getTop(cell) === "WATER" &&
+      checkStack(cell, ["WATER"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WOOD"])),
   },
   HAWK: {
@@ -412,7 +403,7 @@ const ANIMALS = {
     visual: { type: "adj", main: ["LEAF"], others: [["WATER"]] },
     check: (cell, board) =>
       checkStack(cell, ["LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WATER"])),
   },
   BEAVER: {
     id: "BEAVER",
@@ -430,11 +421,11 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WOOD"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
-      const hasWater = neighbors.some((n) => getTop(n) === "WATER");
+      const hasWater = neighbors.some((n) => checkStack(n, ["WATER"]));
       const hasTree = neighbors.some(
-        (n) => n && checkStack(n, ["WOOD", "LEAF"]),
+        (n) => n && checkStack(n, ["WOOD", "LEAF"])
       );
       return hasWater && hasTree;
     },
@@ -448,15 +439,14 @@ const ANIMALS = {
     icon: Turtle,
     iconColor: "text-teal-600",
     visual: { type: "adj", main: ["WATER"], others: [["SAND"], ["STONE"]] },
-    // FIXED: Now checks getTop to prevent buildings counting as stone/sand
     check: (cell, board) => {
-      if (getTop(cell) !== "WATER") return false;
+      if (!checkStack(cell, ["WATER"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
-        neighbors.some((n) => getTop(n) === "SAND") &&
-        neighbors.some((n) => getTop(n) === "STONE")
+        neighbors.some((n) => checkStack(n, ["SAND"])) &&
+        neighbors.some((n) => checkStack(n, ["STONE"]))
       );
     },
   },
@@ -470,9 +460,9 @@ const ANIMALS = {
     iconColor: "text-blue-600",
     visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["WOOD"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -490,13 +480,13 @@ const ANIMALS = {
     iconColor: "text-red-600",
     visual: { type: "adj", main: ["SAND"], others: [["WATER"], ["STONE"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
-        neighbors.some((n) => getTop(n) === "WATER") &&
-        neighbors.some((n) => getTop(n) === "STONE")
+        neighbors.some((n) => checkStack(n, ["WATER"])) &&
+        neighbors.some((n) => checkStack(n, ["STONE"]))
       );
     },
   },
@@ -514,12 +504,12 @@ const ANIMALS = {
       others: [["WATER"], ["WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
-        neighbors.some((n) => getTop(n) === "WATER") &&
+        neighbors.some((n) => checkStack(n, ["WATER"])) &&
         neighbors.some((n) => n && checkStack(n, ["WOOD", "LEAF"]))
       );
     },
@@ -538,9 +528,9 @@ const ANIMALS = {
       others: [["LEAF"], ["WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
         neighbors.some((n) => n && checkStack(n, ["LEAF"])) &&
@@ -564,7 +554,7 @@ const ANIMALS = {
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE"]) &&
       checkAnyNeighbor(board, cell.q, cell.r, (n) =>
-        checkStack(n, ["WOOD", "WOOD"]),
+        checkStack(n, ["WOOD", "WOOD"])
       ),
   },
   DEER: {
@@ -582,7 +572,7 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "SAND"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["SAND"])),
   },
   BEAR: {
     id: "BEAR",
@@ -597,14 +587,10 @@ const ANIMALS = {
       main: ["WOOD", "WOOD", "LEAF"],
       others: [["STONE", "STONE"]],
     },
-    // FIXED: Checks length AND ensures top is Stone (not brick)
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
-      checkAnyNeighbor(
-        board,
-        cell.q,
-        cell.r,
-        (n) => checkStack(n, ["STONE", "STONE"]),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) =>
+        checkStack(n, ["STONE", "STONE"])
       ),
   },
   PANDA: {
@@ -622,7 +608,7 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["WOOD", "WOOD", "LEAF"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WATER"])),
   },
   SCORPION: {
     id: "SCORPION",
@@ -635,7 +621,7 @@ const ANIMALS = {
     visual: { type: "adj", main: ["STONE", "STONE"], others: [["SAND"]] },
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "SAND"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["SAND"])),
   },
 
   // --- TIER 3: CLUSTERS & SURROUNDED (Hard) ---
@@ -695,10 +681,10 @@ const ANIMALS = {
     iconColor: "text-rose-400",
     visual: { type: "adj", main: ["WATER"], others: [["WATER"], ["WATER"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "WATER") return false;
+      if (!checkStack(cell, ["WATER"])) return false;
       let waters = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
-        if (getTop(board[`${n.q},${n.r}`]) === "WATER") waters++;
+        if (checkStack(board[`${n.q},${n.r}`], ["WATER"])) waters++;
       });
       return waters >= 2;
     },
@@ -713,7 +699,7 @@ const ANIMALS = {
     iconColor: "text-fuchsia-300",
     visual: { type: "adj", main: ["SAND"], others: [["LEAF"], ["LEAF"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       let bushes = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
@@ -732,12 +718,11 @@ const ANIMALS = {
     iconColor: "text-cyan-300",
     visual: { type: "adj", main: ["STONE"], others: [["WATER"], ["WATER"]] },
     check: (cell, board) => {
-      // FIXED: Ensure Main is Top Stone
-      if (getTop(cell) !== "STONE") return false;
+      if (!checkStack(cell, ["STONE"])) return false;
       let waters = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (getTop(neighbor) === "WATER") waters++;
+        if (checkStack(neighbor, ["WATER"])) waters++;
       });
       return waters >= 2;
     },
@@ -752,11 +737,11 @@ const ANIMALS = {
     iconColor: "text-amber-700",
     visual: { type: "adj", main: ["STONE"], others: [["SAND"], ["SAND"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "STONE") return false;
+      if (!checkStack(cell, ["STONE"])) return false;
       let fields = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (getTop(neighbor) === "SAND") fields++;
+        if (checkStack(neighbor, ["SAND"])) fields++;
       });
       return fields >= 2;
     },
@@ -775,7 +760,7 @@ const ANIMALS = {
     visual: { type: "adj", main: ["BRICK", "BRICK"], others: [["WATER"]] },
     check: (cell, board) =>
       isBuilding(cell) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "WATER"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["WATER"])),
   },
   CAT: {
     id: "CAT",
@@ -795,7 +780,7 @@ const ANIMALS = {
       let count = 0;
       getNeighbors(cell.q, cell.r).forEach((n) => {
         const neighbor = board[`${n.q},${n.r}`];
-        if (getTop(neighbor) === "SAND") count++;
+        if (checkStack(neighbor, ["SAND"])) count++;
       });
       return count >= 2;
     },
@@ -867,7 +852,7 @@ const ANIMALS = {
       if (!checkStack(cell, ["LEAF"])) return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["LEAF"]),
-        (n) => getTop(n) === "STONE",
+        (n) => checkStack(n, ["STONE"]),
       ]);
     },
   },
@@ -881,10 +866,10 @@ const ANIMALS = {
     iconColor: "text-amber-400",
     visual: { type: "line", sequence: [["SAND"], ["SAND"], ["STONE"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => getTop(n) === "SAND",
-        (n) => getTop(n) === "STONE",
+        (n) => checkStack(n, ["SAND"]),
+        (n) => checkStack(n, ["STONE"]),
       ]);
     },
   },
@@ -898,10 +883,10 @@ const ANIMALS = {
     iconColor: "text-stone-400",
     visual: { type: "line", sequence: [["STONE"], ["STONE"], ["SAND"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "STONE") return false;
+      if (!checkStack(cell, ["STONE"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => getTop(n) === "STONE",
-        (n) => getTop(n) === "SAND",
+        (n) => checkStack(n, ["STONE"]),
+        (n) => checkStack(n, ["SAND"]),
       ]);
     },
   },
@@ -915,9 +900,9 @@ const ANIMALS = {
     iconColor: "text-pink-400",
     visual: { type: "line", sequence: [["WATER"], ["WATER"], ["LEAF"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "WATER") return false;
+      if (!checkStack(cell, ["WATER"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => getTop(n) === "WATER",
+        (n) => checkStack(n, ["WATER"]),
         (n) => checkStack(n, ["LEAF"]),
       ]);
     },
@@ -932,10 +917,10 @@ const ANIMALS = {
     iconColor: "text-red-400",
     visual: { type: "line", sequence: [["WATER"], ["WOOD"], ["WATER"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "WATER") return false;
+      if (!checkStack(cell, ["WATER"])) return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["WOOD"]),
-        (n) => getTop(n) === "WATER",
+        (n) => checkStack(n, ["WATER"]),
       ]);
     },
   },
@@ -949,10 +934,10 @@ const ANIMALS = {
     iconColor: "text-indigo-600",
     visual: { type: "line", sequence: [["WATER"], ["STONE"], ["WATER"]] },
     check: (cell, board) => {
-      if (getTop(cell) !== "WATER") return false;
+      if (!checkStack(cell, ["WATER"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => getTop(n) === "STONE",
-        (n) => getTop(n) === "WATER",
+        (n) => checkStack(n, ["STONE"]),
+        (n) => checkStack(n, ["WATER"]),
       ]);
     },
   },
@@ -1018,7 +1003,7 @@ const ANIMALS = {
     check: (cell, board) => {
       if (!checkStack(cell, ["WOOD", "LEAF"])) return false;
       return checkLine(board, cell.q, cell.r, [
-        (n) => getTop(n) === "WATER",
+        (n) => checkStack(n, ["WATER"]),
         (n) => checkStack(n, ["WOOD", "LEAF"]),
       ]);
     },
@@ -1031,12 +1016,15 @@ const ANIMALS = {
     slots: 2,
     icon: ChessBishop,
     iconColor: "text-pink-400",
-    visual: { type: "line", sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]] },
+    visual: {
+      type: "line",
+      sequence: [["SAND"], ["WOOD", "LEAF"], ["WATER"]],
+    },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       return checkLine(board, cell.q, cell.r, [
         (n) => checkStack(n, ["WOOD", "LEAF"]),
-        (n) => getTop(n) === "WATER",
+        (n) => checkStack(n, ["WATER"]),
       ]);
     },
   },
@@ -1119,7 +1107,7 @@ const ANIMALS = {
     },
     check: (cell, board) =>
       checkStack(cell, ["STONE", "STONE", "STONE"]) &&
-      checkAnyNeighbor(board, cell.q, cell.r, (n) => getTop(n) === "STONE"),
+      checkAnyNeighbor(board, cell.q, cell.r, (n) => checkStack(n, ["STONE"])),
   },
   HORSE: {
     id: "HORSE",
@@ -1135,12 +1123,12 @@ const ANIMALS = {
       others: [["SAND"], ["WOOD", "WOOD", "LEAF"]],
     },
     check: (cell, board) => {
-      if (getTop(cell) !== "SAND") return false;
+      if (!checkStack(cell, ["SAND"])) return false;
       const neighbors = getNeighbors(cell.q, cell.r).map(
-        (n) => board[`${n.q},${n.r}`],
+        (n) => board[`${n.q},${n.r}`]
       );
       return (
-        neighbors.some((n) => getTop(n) === "SAND") &&
+        neighbors.some((n) => checkStack(n, ["SAND"])) &&
         neighbors.some((n) => n && checkStack(n, ["WOOD", "WOOD", "LEAF"]))
       );
     },
